@@ -83,7 +83,7 @@ namespace SuiteCRMAddIn
                 this["host"] = value;
             }
         }
-        [DefaultSettingValue("False"), UserScopedSetting, DebuggerNonUserCode]
+        [DefaultSettingValue("True"), UserScopedSetting, DebuggerNonUserCode]
         public bool ArchiveAttachments
         {
             get
