@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+	 xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
+	 xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+	<Product Id="*"
+			 Name="SuiteCRM Outlook Add-In"
+			 Language="1033"
+			 Version="1.0.0.0"
+			 Manufacturer="Fundator AS"
+			 UpgradeCode="d04f7b6a-9470-4ac4-ab5c-b0ad00b590b8">
+		<Package InstallerVersion="200"
+				 Compressed="yes"
+				 InstallScope="perMachine" />
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+		<MediaTemplate />
+		<Feature Id="ProductFeature" Title="SuiteCRM Add-In" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+			<ComponentRef Id="Registry_FriendlyName" />
+			<ComponentRef Id="Registry_Description" />
+			<ComponentRef Id="Registry_Manifest" />
+			<ComponentRef Id="Registry_LoadBehavior" />
+		</Feature>
+		<PropertyRef Id="NETFRAMEWORK45"/>
+		<Condition Message='This setup requires Microsoft .NET Framework 4.5 package or greater needs to be installed for this installation to continue.'>
+			<![CDATA[Installed OR NETFRAMEWORK45]]>
+		</Condition>
+	</Product>
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="INSTALLFOLDER" Name="WixCRMSetup" />
+				<Component Id="Registry_FriendlyName">
+					<RegistryValue Id="RegKey_FriendlyName" Root="HKCU"
+								   Key="Software\Microsoft\Office\Outlook\AddIns\SuiteCRMAddIn"
+								   Name="FriendlyName"
+								   Value="My Outlook CRM Add-In"
+								   Type="string" KeyPath="yes" />
+				</Component>
+				<Component Id="Registry_Description">
+					<RegistryValue Id="RegKey_Description" Root="HKCU"
+								   Key="Software\Microsoft\Office\Outlook\AddIns\SuiteCRMAddIn"
+								   Name="Description"
+								   Value="My very cool Outlook CRM Add-In"
+								   Type="string" KeyPath="yes" />
+				</Component>
+				<Component Id="Registry_Manifest">
+					<RegistryValue Id="RegKey_Manifest" Root="HKCU"
+								   Key="Software\Microsoft\Office\Outlook\AddIns\SuiteCRMAddIn"
+								   Name="Manifest" Value="[INSTALLFOLDER]SuiteCRMAddIn.vsto|vstolocal"
+								   Type="string" KeyPath="yes" />
+				</Component>
+				<Component Id="Registry_LoadBehavior">
+					<RegistryValue Id="RegKey_LoadBehavior" Root="HKCU"
+								   Key="Software\Microsoft\Office\Outlook\AddIns\SuiteCRMAddIn"
+								   Name="LoadBehavior" Value="3"
+								   Type="integer" KeyPath="yes" />
+				</Component>
+			</Directory>
+		</Directory>
+	</Fragment>
+
+	<Fragment>
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+			<Component Id="SuiteCRMAddIn_vsto_Component">
+				<File Id="SuiteCRMAddIn_vsto" KeyPath="yes"
+					  Name="SuiteCRMAddIn.vsto"
+					  Source="$(var.AddinFiles)" />
+			</Component>
+			<Component Id="SuiteCRMAddIn_dll_manifest_Component">
+				<File Id="SuiteCRMAddIn_dll_manifest" KeyPath="yes"
+					  Name="SuiteCRMAddIn.dll.manifest"
+					  Source="$(var.AddinFiles)"></File>
+			</Component>
+			<Component Id="MSOfficeToolsCommon_dll_Component">
+				<File Id="MSOfficeToolsCommon_dll" KeyPath="yes"
+					  Name="Microsoft.Office.Tools.Common.v4.0.Utilities.dll"
+					  Source="$(var.AddinFiles)"></File>
+			</Component>
+			<Component Id="MSOfficeToolsOutlook_dll_Component">
+				<File Id="MSOfficeToolsOutlook_dll" KeyPath="yes"
+					  Name="Microsoft.Office.Tools.Outlook.dll"
+					  Source="$(var.AddinFiles)"></File>
+			</Component>
+			<Component Id="SuiteCRMAddIn_dll_Component" >
+				<File Id="SuiteCRMAddIn_dll" KeyPath="yes"
+					  Name="SuiteCRMAddIn.dll"
+					  Source="$(var.AddinFiles)" />
+			</Component>
+		</ComponentGroup>
+	</Fragment>
+</Wix>
