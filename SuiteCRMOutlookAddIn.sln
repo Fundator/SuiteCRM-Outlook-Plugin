@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.6
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuiteCRMClient", "SuiteCRMClient\SuiteCRMClient.csproj", "{383E8EE7-604D-447D-A2C2-C50080D28F69}"
 EndProject
@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		lgpl-3.0.md = lgpl-3.0.md
 		README.md = README.md
 	EndProjectSection
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "WixCRMSetup", "WixCRMSetup\WixCRMSetup.wixproj", "{9E70F373-CB78-44F1-A0F2-0DFC02792145}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -149,6 +151,34 @@ Global
 		{245DBFF1-8518-4EC9-9AB4-E00392396485}.SingleImage|Mixed Platforms.Build.0 = Release|Any CPU
 		{245DBFF1-8518-4EC9-9AB4-E00392396485}.SingleImage|x86.ActiveCfg = Release|Any CPU
 		{245DBFF1-8518-4EC9-9AB4-E00392396485}.SingleImage|x86.Build.0 = Release|Any CPU
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.CD_ROM|Any CPU.ActiveCfg = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.CD_ROM|Any CPU.Build.0 = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.CD_ROM|Mixed Platforms.ActiveCfg = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.CD_ROM|Mixed Platforms.Build.0 = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.CD_ROM|x86.ActiveCfg = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.CD_ROM|x86.Build.0 = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.Debug|x86.ActiveCfg = Debug|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.Debug|x86.Build.0 = Debug|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.DVD-5|Any CPU.ActiveCfg = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.DVD-5|Any CPU.Build.0 = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.DVD-5|Mixed Platforms.ActiveCfg = Debug|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.DVD-5|Mixed Platforms.Build.0 = Debug|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.DVD-5|x86.ActiveCfg = Debug|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.DVD-5|x86.Build.0 = Debug|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.Release|Any CPU.ActiveCfg = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.Release|Mixed Platforms.Build.0 = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.Release|x86.ActiveCfg = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.Release|x86.Build.0 = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.SingleImage|Any CPU.ActiveCfg = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.SingleImage|Any CPU.Build.0 = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.SingleImage|Mixed Platforms.ActiveCfg = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.SingleImage|Mixed Platforms.Build.0 = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.SingleImage|x86.ActiveCfg = Release|x86
+		{9E70F373-CB78-44F1-A0F2-0DFC02792145}.SingleImage|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
