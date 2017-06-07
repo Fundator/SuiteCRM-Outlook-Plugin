@@ -234,7 +234,7 @@ namespace SuiteCRMAddIn
             {
                 try
                 {
-                    if (txtURL.Text.EndsWith(@"/"))
+                    if (txtURL.Text.EndsWith(@"/", StringComparison.Ordinal))
                     {
                     }
                     else
@@ -326,7 +326,7 @@ namespace SuiteCRMAddIn
 
             try
             {
-                if (txtURL.Text.EndsWith(@"/"))
+                if (txtURL.Text.EndsWith(@"/", StringComparison.Ordinal))
                 {
                 }
                 else

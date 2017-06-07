@@ -26,7 +26,7 @@ namespace SuiteCRMAddIn.BusinessLogic
     /// A direction in which things may be synchronised. Directions are named
     /// with respect to CRM.
     /// </summary>
-    public class SyncDirection
+    public static class SyncDirection
     {
         /// <summary>
         /// The actual directions
