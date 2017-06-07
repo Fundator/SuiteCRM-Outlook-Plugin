@@ -145,24 +145,24 @@ namespace SuiteCRMAddIn
             return new Log4NetLogger(area);
         }
 
-        public void AddEntry(string message, LogEntryType type)
+        public void AddEntry(string logMessage, LogEntryType type)
         {
             switch (type)
             {
                 case LogEntryType.Debug:
-                    log.Debug(message);
+                    log.Debug(logMessage);
                     return;
 
                 case LogEntryType.Error:
-                    log.Error(message);
+                    log.Error(logMessage);
                     return;
 
                 case LogEntryType.Information:
-                    log.Info(message);
+                    log.Info(logMessage);
                     return;
 
                 case LogEntryType.Warning:
-                    log.Warn(message);
+                    log.Warn(logMessage);
                     return;
             }
         }
