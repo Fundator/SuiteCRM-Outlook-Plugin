@@ -381,10 +381,10 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>SuiteCRMAddIn_1_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>SuiteCRMAddIn_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>E6EDFCC871419AD73BB3E39DBE9273BC06ED0EC7</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>5436AE667C077A0861FD68074F484293669F5BC5</ManifestCertificateThumbprint>
   </PropertyGroup>
   <!-- Include the build rules for a C# project. -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
