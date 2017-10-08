@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+	 xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
+	 xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+	<Product Id="*"
+			 Name="SuiteCRM Outlook Add-In"
+			 Language="1033"
+			 Version="3.1.0"
+			 Manufacturer="Fundator AS"
+			 UpgradeCode="d04f7b6a-9470-4ac4-ab5c-b0ad00b590b8">
+		<Package InstallerVersion="200"
+				 Compressed="yes"
+				 InstallScope="perMachine" />
+		<MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+		<MediaTemplate />
+		<Feature Id="ProductFeature" Title="SuiteCRM Add-In" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+			<ComponentGroupRef Id="ProductImages" />
+			<ComponentRef Id="Registry_FriendlyName" />
+			<ComponentRef Id="Registry_Description" />
+			<ComponentRef Id="Registry_Manifest" />
+			<ComponentRef Id="Registry_LoadBehavior" />
+		</Feature>
+		<PropertyRef Id="NETFRAMEWORK45"/>
+		<Condition Message='This setup requires Microsoft .NET Framework 4.5 package or greater needs to be installed for this installation to continue.'>
+			<![CDATA[Installed OR NETFRAMEWORK45]]>
+		</Condition>
+    <!--<InstallExecuteSequence>
+      <RemoveExistingProducts After="InstallInitialize"/>
+    </InstallExecuteSequence>-->
+	</Product>
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="INSTALLFOLDER" Name="WixCRMSetup">
+					<Directory Id="IMAGESFOLDER" Name="Images"/>
+				</Directory>
+				<Component Id="Registry_FriendlyName">
+					<RegistryValue Id="RegKey_FriendlyName" Root="HKCU"
+								   Key="Software\Microsoft\Office\Outlook\AddIns\SuiteCRMAddIn"
+								   Name="FriendlyName"
+								   Value="Outlook SuiteCRM Add-In"
+								   Type="string" KeyPath="yes" />
+				</Component>
+				<Component Id="Registry_Description">
+					<RegistryValue Id="RegKey_Description" Root="HKCU"
+								   Key="Software\Microsoft\Office\Outlook\AddIns\SuiteCRMAddIn"
+								   Name="Description"
+								   Value="This addin supports synchronizing SuiteCRM with Outlook"
+								   Type="string" KeyPath="yes" />
+				</Component>
+				<Component Id="Registry_Manifest">
+					<RegistryValue Id="RegKey_Manifest" Root="HKCU"
+								   Key="Software\Microsoft\Office\Outlook\AddIns\SuiteCRMAddIn"
+								   Name="Manifest" Value="[INSTALLFOLDER]SuiteCRMAddIn.vsto"
+								   Type="string" KeyPath="yes" />
+				</Component>
+				<Component Id="Registry_LoadBehavior">
+					<RegistryValue Id="RegKey_LoadBehavior" Root="HKCU"
+								   Key="Software\Microsoft\Office\Outlook\AddIns\SuiteCRMAddIn"
+								   Name="LoadBehavior" Value="3"
+								   Type="integer" KeyPath="yes" />
+				</Component>
+			</Directory>
+		</Directory>
+	</Fragment>
+
+	<Fragment>
+		<ComponentGroup Id="ProductImages" Directory="IMAGESFOLDER">
+			<Component Id="img1">
+				<File Id="img1" KeyPath="yes" Name="AddOpportunities.jpg" Source="$(var.Images)" />
+			</Component>
+			<Component Id="img2">
+				<File Id="img2" KeyPath="yes" Name="AddressBook.png" Source="$(var.Images)" />
+			</Component>
+			<Component Id="img3">
+				<File Id="img3" KeyPath="yes" Name="Archive.png" Source="$(var.Images)" />
+			</Component>
+			<Component Id="img4">
+				<File Id="img4" KeyPath="yes" Name="Cancel.png" Source="$(var.Images)" />
+			</Component>
+			<Component Id="img5">
+				<File Id="img5" KeyPath="yes" Name="CompanyLogo.png" Source="$(var.Images)" />
+			</Component>
+			<Component Id="img6">
+				<File Id="img6" KeyPath="yes" Name="Contacts.jpg" Source="$(var.Images)" />
+			</Component>
+			<Component Id="img7">
+				<File Id="img7" KeyPath="yes" Name="Search_Button.png" Source="$(var.Images)" />
+			</Component>
+			<Component Id="img8">
+				<File Id="img8" KeyPath="yes" Name="SendAndArchive.png" Source="$(var.Images)" />
+			</Component>
+			<Component Id="img9">
+				<File Id="img9" KeyPath="yes" Name="Settings.png" Source="$(var.Images)" />
+			</Component>
+			<Component Id="img10">
+				<File Id="img10" KeyPath="yes" Name="SugarCRM.png" Source="$(var.Images)" />
+			</Component>
+			<Component Id="img11">
+				<File Id="img11" KeyPath="yes" Name="SuiteCRM.ico" Source="$(var.Images)" />
+			</Component>
+			<Component Id="img12">
+				<File Id="img12" KeyPath="yes" Name="SuiteCRM.jpg" Source="$(var.Images)" />
+			</Component>
+			<Component Id="img13">
+				<File Id="img13" KeyPath="yes" Name="Check.png" Source="$(var.Images)" />
+			</Component>
+		</ComponentGroup>
+	</Fragment>
+
+	<Fragment>
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+
+			<!-- 3rd party components -->
+			<Component Id="SuiteCRMAddIn_log4net_Component">
+				<File Id="SuiteCRMAddIn_log4net" KeyPath="yes"
+					  Name="log4net.dll"
+					  Source="$(var.AddinFiles)" />
+			</Component>
+			<Component Id="SuiteCRMAddIn_json_Component">
+				<File Id="SuiteCRMAddIn_json" KeyPath="yes"
+					  Name="Newtonsoft.Json.dll"
+					  Source="$(var.AddinFiles)" />
+			</Component>
+
+			<!-- VSTO -->
+			<Component Id="SuiteCRMAddIn_vsto_Component">
+				<File Id="SuiteCRMAddIn_vsto" KeyPath="yes"
+					  Name="SuiteCRMAddIn.vsto"
+					  Source="$(var.AddinFiles)" />
+			</Component>
+			
+			<!-- Office SDK Components -->
+			<Component Id="MSOfficeToolsCommon_dll_Component">
+				<File Id="MSOfficeToolsCommon_dll" KeyPath="yes"
+					  Name="Microsoft.Office.Tools.Common.dll"
+					  Source="$(var.AddinFiles)"></File>
+			</Component>
+			<Component Id="MSOfficeToolsCommonUtil_dll_Component">
+				<File Id="MSOfficeToolsCommonUtil_dll" KeyPath="yes"
+					  Name="Microsoft.Office.Tools.Common.v4.0.Utilities.dll"
+					  Source="$(var.AddinFiles)"></File>
+			</Component>
+			<Component Id="MSOfficeTools_dll_Component">
+				<File Id="MSOfficeTools_dll" KeyPath="yes"
+					  Name="Microsoft.Office.Tools.dll"
+					  Source="$(var.AddinFiles)"></File>
+			</Component>
+			<Component Id="MSOfficeToolsOutlook_dll_Component">
+				<File Id="MSOfficeToolsOutlook_dll" KeyPath="yes"
+					  Name="Microsoft.Office.Tools.Outlook.dll"
+					  Source="$(var.AddinFiles)"></File>
+			</Component>
+			<Component Id="MSOfficeToolsOutlookUtil_dll_Component">
+				<File Id="MSOfficeToolsOutlookUtil_dll" KeyPath="yes"
+					  Name="Microsoft.Office.Tools.Outlook.v4.0.Utilities.dll"
+					  Source="$(var.AddinFiles)"></File>
+			</Component>
+			<Component Id="MSOfficeToolsFramework_dll_Component">
+				<File Id="MSOfficeToolsFramework_dll" KeyPath="yes"
+					  Name="Microsoft.Office.Tools.v4.0.Framework.dll"
+					  Source="$(var.AddinFiles)"></File>
+			</Component>
+			<Component Id="MSVSToolsAppRuntime_dll_Component">
+				<File Id="MSVSToolsAppRuntime_dll" KeyPath="yes"
+					  Name="Microsoft.VisualStudio.Tools.Applications.Runtime.dll"
+					  Source="$(var.AddinFiles)"></File>
+			</Component>
+
+			<!-- SuiteCRMAddin Components -->
+			<Component Id="SuiteCRMAddIn_dll_Component" >
+				<File Id="SuiteCRMAddIn_dll" KeyPath="yes"
+					  Name="SuiteCRMAddIn.dll"
+					  Source="$(var.AddinFiles)" />
+			</Component>
+			<Component Id="SuiteCRMAddIn_dll_config_Component">
+				<File Id="SuiteCRMAddIn_dll_config" KeyPath="yes"
+					  Name="SuiteCRMAddIn.dll.config"
+					  Source="$(var.AddinFiles)"></File>
+			</Component>
+			<Component Id="SuiteCRMAddIn_dll_manifest_Component">
+				<File Id="SuiteCRMAddIn_dll_manifest" KeyPath="yes"
+					  Name="SuiteCRMAddIn.dll.manifest"
+					  Source="$(var.AddinFiles)"></File>
+			</Component>
+			<Component Id="SuiteCRMClient_dll_Component">
+				<File Id="SuiteCRMClient_dll" KeyPath="yes"
+					  Name="SuiteCRMClient.dll"
+					  Source="$(var.AddinFiles)"></File>
+			</Component>
+		</ComponentGroup>
+	</Fragment>
+</Wix>
