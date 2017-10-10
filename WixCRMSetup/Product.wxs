@@ -120,6 +120,11 @@
 					  Name="Newtonsoft.Json.dll"
 					  Source="$(var.AddinFiles)" />
 			</Component>
+			<Component Id="SuiteCRMAddIn_ngettext_Component">
+				<File Id="SuiteCRMAddIn_ngettext" KeyPath="yes"
+					  Name="NGettext.dll"
+					  Source="$(var.AddinFiles)" />
+			</Component>
 
 			<!-- VSTO -->
 			<Component Id="SuiteCRMAddIn_vsto_Component">
