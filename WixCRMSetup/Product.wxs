@@ -5,7 +5,7 @@
 	<Product Id="*"
 			 Name="SuiteCRM Outlook Add-In"
 			 Language="1033"
-			 Version="3.1.0"
+			 Version="3.1.1"
 			 Manufacturer="Fundator AS"
 			 UpgradeCode="d04f7b6a-9470-4ac4-ab5c-b0ad00b590b8">
 		<Package InstallerVersion="200"
@@ -95,16 +95,13 @@
 				<File Id="img9" KeyPath="yes" Name="Settings.png" Source="$(var.Images)" />
 			</Component>
 			<Component Id="img10">
-				<File Id="img10" KeyPath="yes" Name="SugarCRM.png" Source="$(var.Images)" />
+				<File Id="img10" KeyPath="yes" Name="SuiteCRM.ico" Source="$(var.Images)" />
 			</Component>
 			<Component Id="img11">
-				<File Id="img11" KeyPath="yes" Name="SuiteCRM.ico" Source="$(var.Images)" />
+				<File Id="img11" KeyPath="yes" Name="Check.png" Source="$(var.Images)" />
 			</Component>
 			<Component Id="img12">
-				<File Id="img12" KeyPath="yes" Name="SuiteCRM.jpg" Source="$(var.Images)" />
-			</Component>
-			<Component Id="img13">
-				<File Id="img13" KeyPath="yes" Name="Check.png" Source="$(var.Images)" />
+				<File Id="img12" KeyPath="yes" Name="SuiteCRM.png" Source="$(var.Images)" />
 			</Component>
 		</ComponentGroup>
 	</Fragment>
