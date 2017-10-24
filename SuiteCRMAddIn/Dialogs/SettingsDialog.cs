@@ -277,8 +277,8 @@ namespace SuiteCRMAddIn.Dialogs
                     {
                         MessageBox.Show("Login Successful!!!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     }
-                    Properties.Settings.Default.Host = SafelyGetText(txtURL);
-                    Properties.Settings.Default.Username = SafelyGetText(txtUsername);
+                    //Properties.Settings.Default.Host = SafelyGetText(txtURL);
+                    //Properties.Settings.Default.Username = SafelyGetText(txtUsername);
                     Properties.Settings.Default.Password = SafelyGetText(txtPassword);
                 }
                 catch (Exception ex)
@@ -408,8 +408,8 @@ namespace SuiteCRMAddIn.Dialogs
         /// </summary>
         private void SaveSettings()
         {
-            Properties.Settings.Default.Host = SafelyGetText(txtURL);
-            Properties.Settings.Default.Username = SafelyGetText(txtUsername);
+            //Properties.Settings.Default.Host = SafelyGetText(txtURL);
+            //Properties.Settings.Default.Username = SafelyGetText(txtUsername);
             Properties.Settings.Default.Password = SafelyGetText(txtPassword);
             Properties.Settings.Default.IsLDAPAuthentication = chkEnableLDAPAuthentication.Checked;
             Properties.Settings.Default.LDAPKey = SafelyGetText(txtLDAPAuthenticationKey);
@@ -427,8 +427,8 @@ namespace SuiteCRMAddIn.Dialogs
 
             SaveAccountAutoArchivingSettings();
 
-            Properties.Settings.Default.SyncCalendar = (SyncDirection.Direction)this.syncCalendarMenu.SelectedValue;
-            Properties.Settings.Default.SyncContacts = (SyncDirection.Direction)this.syncContactsMenu.SelectedValue;
+            //Properties.Settings.Default.SyncCalendar = (SyncDirection.Direction)this.syncCalendarMenu.SelectedValue;
+            //Properties.Settings.Default.SyncContacts = (SyncDirection.Direction)this.syncContactsMenu.SelectedValue;
 
             Properties.Settings.Default.ShowConfirmationMessageArchive = this.chkShowConfirmationMessageArchive.Checked;
             if (this.txtSyncMaxRecords.Text != string.Empty)

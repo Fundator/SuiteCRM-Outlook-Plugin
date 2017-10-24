@@ -191,6 +191,11 @@
 					  Name="SuiteCRMClient.dll"
 					  Source="$(var.AddinFiles)"></File>
 			</Component>
+			<Component Id="SuiteCRMUtil_dll_Component">
+				<File Id="SuiteCRMUtil_dll" KeyPath="yes"
+					  Name="SuiteCRMUtil.dll"
+					  Source="$(var.AddinFiles)"></File>
+			</Component>
 		</ComponentGroup>
 	</Fragment>
 </Wix>

@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuiteCRMAddIn", "SuiteCRMAd
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuiteCRMClient", "SuiteCRMClient\SuiteCRMClient.csproj", "{383E8EE7-604D-447D-A2C2-C50080D28F69}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuiteCRMUtil", "SuiteCRMUtil\SuiteCRMUtil.csproj", "{5F528E60-2876-4F9C-BFD3-15FC7FE06756}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,18 @@ Global
 		{383E8EE7-604D-447D-A2C2-C50080D28F69}.Release|x64.Build.0 = Release|Any CPU
 		{383E8EE7-604D-447D-A2C2-C50080D28F69}.Release|x86.ActiveCfg = Release|Any CPU
 		{383E8EE7-604D-447D-A2C2-C50080D28F69}.Release|x86.Build.0 = Release|Any CPU
+		{5F528E60-2876-4F9C-BFD3-15FC7FE06756}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F528E60-2876-4F9C-BFD3-15FC7FE06756}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F528E60-2876-4F9C-BFD3-15FC7FE06756}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5F528E60-2876-4F9C-BFD3-15FC7FE06756}.Debug|x64.Build.0 = Debug|Any CPU
+		{5F528E60-2876-4F9C-BFD3-15FC7FE06756}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5F528E60-2876-4F9C-BFD3-15FC7FE06756}.Debug|x86.Build.0 = Debug|Any CPU
+		{5F528E60-2876-4F9C-BFD3-15FC7FE06756}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F528E60-2876-4F9C-BFD3-15FC7FE06756}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F528E60-2876-4F9C-BFD3-15FC7FE06756}.Release|x64.ActiveCfg = Release|Any CPU
+		{5F528E60-2876-4F9C-BFD3-15FC7FE06756}.Release|x64.Build.0 = Release|Any CPU
+		{5F528E60-2876-4F9C-BFD3-15FC7FE06756}.Release|x86.ActiveCfg = Release|Any CPU
+		{5F528E60-2876-4F9C-BFD3-15FC7FE06756}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
