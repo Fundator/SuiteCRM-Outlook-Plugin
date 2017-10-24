@@ -57,7 +57,7 @@
       <Value Profile="(Default)">3</Value>
     </Setting>
     <Setting Name="SyncContacts" Type="SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction" Scope="Application">
-      <Value Profile="(Default)">3</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="IsLDAPAuthentication" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
