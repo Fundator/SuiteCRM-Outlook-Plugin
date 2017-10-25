@@ -435,6 +435,7 @@ namespace SuiteCRMAddIn.Dialogs
 			// 
 			// txtPassword
 			// 
+			this.txtPassword.Enabled = false;
 			this.txtPassword.Location = new System.Drawing.Point(79, 105);
 			this.txtPassword.Name = "txtPassword";
 			this.txtPassword.Size = new System.Drawing.Size(207, 20);
@@ -443,6 +444,7 @@ namespace SuiteCRMAddIn.Dialogs
 			// 
 			// txtUsername
 			// 
+			this.txtUsername.Enabled = false;
 			this.txtUsername.Location = new System.Drawing.Point(79, 71);
 			this.txtUsername.Name = "txtUsername";
 			this.txtUsername.Size = new System.Drawing.Size(207, 20);
