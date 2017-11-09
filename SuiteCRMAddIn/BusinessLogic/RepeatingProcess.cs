@@ -41,7 +41,7 @@ namespace SuiteCRMAddIn.BusinessLogic
         /// <summary>
         /// The polling interval; default is five minutes.
         /// </summary>
-        protected TimeSpan SyncPeriod = TimeSpan.FromMinutes(5);
+        protected TimeSpan SyncPeriod = TimeSpan.FromSeconds(30);
 
         /// <summary>
         /// The thread in which syncing is run.
