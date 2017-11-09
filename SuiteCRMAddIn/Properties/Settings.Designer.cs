@@ -227,6 +227,7 @@ namespace SuiteCRMAddIn.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
         public global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction SyncContacts {
             get {
                 return ((global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction)(this["SyncContacts"]));
