@@ -144,7 +144,7 @@ namespace SuiteCRMClient
         {
             try
             {
-                var requestUrl = SuiteCRMURL.AbsoluteUri + "custom/debank/api/rest.php" + "?Auth=" + AuthUtil.GetEndpointAuthorizationString(DateTime.Now);
+				var requestUrl = SuiteCRMURL.AbsoluteUri + "service/v4_1/rest.php";
                 string jsonData = CreatePayload(strMethod, objInput);
 
                 var contentTypeAndEncoding = "application/x-www-form-urlencoded; charset=utf-8";
