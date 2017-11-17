@@ -148,9 +148,20 @@ namespace SuiteCRMAddIn.BusinessLogic
             DateTime utcNow = DateTime.UtcNow;
             double modifiedSinceSeconds = Math.Abs((utcNow - OModifiedDate).TotalSeconds);
             ILogger log = Globals.ThisAddIn.Log;
-            bool reallyChanged = this.ReallyChanged();
-            bool isSyncable = this.ShouldSyncWithCrm;
-            string prefix = $"SyncState.ShouldPerformSyncNow: {this.CrmType} {this.CrmEntryId}";
+			bool reallyChanged, isSyncable;
+			try
+			{
+				reallyChanged = this.ReallyChanged();
+				isSyncable = this.ShouldSyncWithCrm;
+			}
+			catch (Exception e)
+			{
+				log.Error("Caught exception on ReallyChanged(), this item will not be synced ", e);
+				reallyChanged = false;
+				isSyncable = false;
+			}
+
+			string prefix = $"SyncState.ShouldPerformSyncNow: {this.CrmType} {this.CrmEntryId}";
 
             log.Debug(reallyChanged ? $"{prefix} has changed." : $"{prefix} has not changed.");
             log.Debug(isSyncable ? $"{prefix} is syncable." : $"{ prefix} is not syncable.");

@@ -122,6 +122,7 @@ namespace SuiteCRMAddIn.BusinessLogic
         /// </summary>
         private async void PerformRepeatedly()
         {
+			var i = 1;
             do
             {
                 var fred = Thread.CurrentThread;
@@ -129,6 +130,8 @@ namespace SuiteCRMAddIn.BusinessLogic
                 {
                     Log.Warn($"Anonymous thread {fred.ManagedThreadId} running as '{this.Name}'.");
                 }
+
+				Log.Error($"NOT AN ERROR: Repeating process {this.Name} performing iteration {i}");
 
                 lock (processLock)
                 {
@@ -159,6 +162,7 @@ namespace SuiteCRMAddIn.BusinessLogic
                         // that's OK, that's what's supposed to happen.
                     }
                 }
+				i++;
             }
             while (this.IsActive);
 

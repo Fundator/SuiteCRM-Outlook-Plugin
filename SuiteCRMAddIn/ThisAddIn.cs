@@ -414,6 +414,7 @@ namespace SuiteCRMAddIn
 
         public void StartSynchronisationProcesses()
         {
+			Log.Error("NOT AN ERROR: Running ThisAddin.StartSynchronisationProcesses()");
             DoOrLogError(() => this.appointmentSynchroniser.Start(), catalogue.GetString("Starting appointments synchroniser"));
             DoOrLogError(() => this.contactSynchroniser.Start(), catalogue.GetString("Starting contacts synchroniser"));
             DoOrLogError(() => this.taskSynchroniser.Start(), catalogue.GetString("Starting tasks synchroniser"));
