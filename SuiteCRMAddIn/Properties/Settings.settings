@@ -68,8 +68,8 @@
     <Setting Name="ShowConfirmationMessageArchive" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="LogLevel" Type="SuiteCRMClient.Logging.LogEntryType" Scope="User">
-      <Value Profile="(Default)">Error</Value>
+    <Setting Name="LogLevel" Type="SuiteCRMClient.Logging.LogEntryType" Scope="Application">
+      <Value Profile="(Default)">Debug</Value>
     </Setting>
     <Setting Name="DaysOldEmailToAutoArchive" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">10</Value>
