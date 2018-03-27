@@ -29,6 +29,8 @@ namespace SuiteCRMClient
     using System.Collections;
     using System.Linq;
     using Logging;
+    using System.Net.Mail;
+    using System.Text.RegularExpressions;
 
     /// <summary>
     /// A class which comprises wrappers for calls in the REST API, which return objects
@@ -176,6 +178,67 @@ namespace SuiteCRMClient
 
 
         /// <summary>
+        /// Get the user id of the user with this email address, if any.
+        /// </summary>
+        /// <param name="mailAddress">the email address to seek.</param>
+        /// <returns>An id if available, else the empty string.</returns>
+        public static string GetUserId(MailAddress mailAddress)
+        {
+            string result = string.Empty;
+            EntryList list = GetEntryList(
+                "Users", 
+                $"(users.id in (select eabr.bean_id from email_addr_bean_rel eabr INNER JOIN email_addresses ea on eabr.email_address_id = ea.id where eabr.bean_module = 'Users' and ea.email_address LIKE '%{MySqlEscape(mailAddress.ToString())}%'))", 
+                0, 
+                "id DESC", 
+                0, 
+                false, 
+                new string[] { "id" });
+            
+            if (list.entry_list.Count<EntryValue>() > 0)
+            {
+                result = list.entry_list[0].id;
+            }
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// Get the user id of the user with this email address, if any.
+        /// </summary>
+        /// <param name="username">the username to seek.</param>
+        /// <returns>An id if available, else the empty string.</returns>
+        public static string GetUserId(string username)
+        {
+            string result = string.Empty;
+           
+            EntryList list = GetEntryList("Users", $"users.user_name LIKE '%{MySqlEscape(username)}%'", 0, "id DESC", 0, false, new string[] { "id" });
+
+            if (list != null && 
+                list.entry_list != null && 
+                list.entry_list.Count<EntryValue>() > 0)
+            {
+                result = list.entry_list[0].id;
+            }
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// Create and return a copy of this string which escapes all characters which
+        /// might render MySQL vulnerable to SQL injection attacks.
+        /// </summary>
+        /// <param name="input">The input string.</param>
+        /// <returns>A suitably escaped copy of the input.</returns>
+        public static string MySqlEscape(string input)
+        {
+            return string.IsNullOrEmpty(input) ? null : Regex.Replace(input, "[\\r\\n\\x00\\x1a\\\\'\"]", @"\$0");
+        }
+
+
+
+        /// <summary>
         /// Get the CRM id of the current user, ignoring the cache.
         /// </summary>
         /// <returns>the CRM id of the current user.</returns>
@@ -238,7 +301,23 @@ namespace SuiteCRMClient
             return SetEntryUnsafe(data.ToArray(), moduleName);
         }
 
+        /// <summary>
+        /// Sets an entry in CRM and returns the id. 
+        /// </summary>
+        /// <param name="data">The data to set.</param>
+        /// <param name="moduleName">The name of the CRM module into which to insert it.</param>
+        /// <returns>the CRM id of the object created or modified.</returns>
+        public static string SetEntry(NameValueCollection data, string moduleName)
+        {
+            return SetEntry(data.ToArray(), moduleName);
+        }
 
+        /// <summary>
+        /// Sets an entry in CRM and returns the id. 
+        /// </summary>
+        /// <param name="data">The data to set.</param>
+        /// <param name="moduleName">The name of the CRM module into which to insert it.</param>
+        /// <returns>the CRM id of the object created or modified.</returns>
         public static string SetEntry(NameValue[] values, string moduleName)
         {
             EnsureLoggedIn();
@@ -254,32 +333,56 @@ namespace SuiteCRMClient
                 _result.id.ToString();
         }
 
-        public static string GetRelationship(string MainModule, string ID, string ModuleToFind)
+        /// <summary>
+        /// Send acceptance status to CRM to synchronise.
+        /// </summary>
+        /// <param name="meetingId">The id of the meeting to accept an invitation to.</param>
+        /// <param name="moduleName">The module within which the invitee resides.</param>
+        /// <param name="moduleId">The id of the invitee within that module.</param>
+        /// <param name="status">The acceptance status to set.</param>
+        /// <returns>true if nothing dreadful happens - not necessarily proof that the call succeeded.</returns>
+        public static bool SetMeetingAcceptance(string meetingId, string moduleName, string moduleId, string status)
         {
-            try
+            Log.Debug($"RestApiWrapper.SetMeetingAcceptance: meetingId=`{meetingId}`; moduleName=`{moduleName}`; moduleId=`{moduleId}`; status=`{status}`");
+            bool result = false;
+
+            if (EnsureLoggedIn())
             {
-                EnsureLoggedIn();
                 object data = new
                 {
                     @session = SuiteCRMUserSession.id,
-                    @module_name = MainModule,
-                    @module_id = ID,
-                    @link_field_name = ModuleToFind,
-                    @related_module_query = "",
-                    @related_fields = new string[] { "id" }/*,
-                    @query = ""
-                    //@limit = 1*/
+                    @module_name = "Meetings",
+                    @module_id = meetingId,
+                    @link_field_name = moduleName.ToLower(),
+                    @related_ids = new string[] { moduleId },
+                    @name_value_list = new NameValue[] { new NameValue() { name = "accept_status", value = status } },
                 };
-                Relationships _result = SuiteCRMUserSession.RestServer.GetCrmResponse<Relationships>("get_relationships", data);
-                if (_result.entry_list.Length > 0)
-                    return _result.entry_list[0].id;
-                return "";
+                var value = SuiteCRMUserSession.RestServer.GetCrmResponse<RESTObjects.eNewSetRelationshipListResult>("set_relationship", data);
+
+                result = value.Failed == 0;
+            }
+            string success = result ? "succeeded" : "failed";
+            Log.Debug($"RestApiWrapper.SetMeetingAcceptance: {success}");
+
+            return result;
+        }
+
+        public static string GetRelationship(string MainModule, string ID, string ModuleToFind)
+        {
+            string result;
+
+            try
+            {
+                EntryValue[] entries = RestAPIWrapper.GetRelationships(MainModule, ID, ModuleToFind, new string[] { "id" });
+                result = entries.Length > 0 ? entries[0].id : string.Empty;
             }
             catch (System.Exception)
             {
                 // Swallow exception(!)
-                return "";
+                result = string.Empty;
             }
+
+            return result;
         }
 
         public static EntryValue[] GetRelationships(string MainModule, string ID, string ModuleToFind, string[] fields)
@@ -294,18 +397,22 @@ namespace SuiteCRMClient
                     @module_id = ID,
                     @link_field_name = ModuleToFind,
                     @related_module_query = "",
-                    @related_fields = fields/*,
-                    @query = ""
-                    //@limit = 1*/
+                    @related_fields = fields,
+                    @related_module_link_name_to_fields_array = new object[] { },
+                    @deleted = false,
+                    @order_by = "",
+                    @offset = 0,
+                    @limit = false
                 };
                 Relationships _result = SuiteCRMUserSession.RestServer.GetCrmResponse<Relationships>("get_relationships", data);
-                if (_result.entry_list.Length > 0)
-                    return _result.entry_list;
-                return null;
+                
+                return _result.entry_list.Length > 0 ? 
+                    _result.entry_list:
+                    null;
             }
-            catch (System.Exception)
+            catch (System.Exception any)
             {
-                // Swallow exception(!)
+                Log.Error($"RestAPIWrapper.GetRelationships: main `{MainModule}`, id `{ID}`, seeking `{ModuleToFind}`.", any);
                 return null;
             }
         }
@@ -326,13 +433,12 @@ namespace SuiteCRMClient
 
                 if (!result)
                 {
-                    Log.Warn("SuiteCrmHelper.SetRelationshipUnsafe: failed to set relationship");
+                    Log.Warn("RestAPIWrapper.SetRelationshipUnsafe: failed to set relationship");
                 }
             }
             catch (System.Exception exception)
             {
-                Log.Error("SuiteCrmHelper.SetRelationshipUnsafe:", exception);
-                // Swallow exception(!)
+                Log.Error("RestAPIWrapper.SetRelationshipUnsafe:", exception);
                 result = false;
             }
 
@@ -387,6 +493,8 @@ namespace SuiteCRMClient
         {
             bool result;
 
+            linkFieldName = linkFieldName.ToLower();
+
             if (EnsureLoggedIn())
             {
                 object data = new
@@ -399,14 +507,18 @@ namespace SuiteCRMClient
                     @name_value_list = new NameValue[] { },
                     @delete = relationship.delete
                 };
-                var _value = SuiteCRMUserSession.RestServer.GetCrmResponse<RESTObjects.eNewSetRelationshipListResult>("set_relationship", data);
+                var value = SuiteCRMUserSession.RestServer.GetCrmResponse<RESTObjects.eNewSetRelationshipListResult>("set_relationship", data);
 
-                if (_value.Failed > 0)
+                if (value.Failed == 0)
                 {
-                    Log.Warn($"SuiteCrmHelper.SetRelationship: failed to set relationship using link field name '{linkFieldName}'");
+                    Log.Info($"RestAPIWrapper.TrySetRelationship: successfully set relationship using link field name '{linkFieldName}'");
+                }
+                else
+                {
+                    Log.Warn($"RestAPIWrapper.TrySetRelationship: failed to set relationship using link field name '{linkFieldName}'");
                 }
 
-                result = (_value.Created != 0);
+                result = (value.Created != 0);
             }
             else
             {
@@ -438,53 +550,65 @@ namespace SuiteCRMClient
         
         public static EntryList GetEntryList(string module, string query, int limit, string order_by, int offset, bool GetDeleted, string[] fields)
         {
-            EnsureLoggedIn();
             EntryList result = new EntryList();
-            object data = new
-            {
-                @session = SuiteCRMUserSession.id,
-                @module_name = module,
-                @query = query,
-                @order_by = order_by,
-                @offset = offset,
-                @select_fields = fields,
-                @max_results = limit,
-                @deleted = Convert.ToInt32(GetDeleted)
-            };
-            result = SuiteCRMUserSession.RestServer.GetCrmResponse<RESTObjects.EntryList>("get_entry_list", data);                
-            if (result.error != null)
-            {
-                throw new Exception(result.error.description);                    
-            }
 
-            if (result.entry_list != null)
+            if (EnsureLoggedIn())
             {
-                try
+                object data = new
                 {
-                    Hashtable hashtable = new Hashtable();
-                    int index = 0;
-                    foreach (EntryValue _value in result.entry_list)
-                    {
-                        if (!hashtable.Contains(_value.id))
-                        {
-                            hashtable.Add(_value.id, _value);
-                        }
-                        result.entry_list[index] = null;
-                        index++;
-                    }
-                    int num2 = 0;
-                    result.entry_list = null;
-                    result.entry_list = new EntryValue[hashtable.Count];
-                    result.result_count = hashtable.Count;
-                    foreach (DictionaryEntry entry in hashtable)
-                    {
-                        result.entry_list[num2] = (EntryValue)entry.Value;
-                        num2++;
-                    }
+                    @session = SuiteCRMUserSession.id,
+                    @module_name = module,
+                    @query = query,
+                    @order_by = order_by,
+                    @offset = offset,
+                    @select_fields = fields,
+                    @link_names_to_fields_array = module == "Meetings" ?
+                    new[] {
+                    new { @name = "users", @value = new[] {"id", "email1" } },
+                    new { @name = "contacts", @value = new[] {"id", "account_id", "email1" } },
+                    new { @name = "leads", @value = new[] {"id", "email1" } }
+                    } :
+                    null,
+                    @max_results = $"{limit}",
+                    @deleted = GetDeleted,
+                    @favorites = false
+                };
+                result = SuiteCRMUserSession.RestServer.GetCrmResponse<RESTObjects.EntryList>("get_entry_list", data);
+                if (result.error != null)
+                {
+                    throw new Exception(result.error.description);
                 }
-                catch (System.Exception)
+
+                if (result.entry_list != null)
                 {
-                    result.result_count = 0;
+                    try
+                    {
+                        result.resolveLinks();
+                        Hashtable hashtable = new Hashtable();
+                        int index = 0;
+                        foreach (EntryValue _value in result.entry_list)
+                        {
+                            if (!hashtable.Contains(_value.id))
+                            {
+                                hashtable.Add(_value.id, _value);
+                            }
+                            result.entry_list[index] = null;
+                            index++;
+                        }
+                        int num2 = 0;
+                        result.entry_list = null;
+                        result.entry_list = new EntryValue[hashtable.Count];
+                        result.result_count = hashtable.Count;
+                        foreach (DictionaryEntry entry in hashtable)
+                        {
+                            result.entry_list[num2] = (EntryValue)entry.Value;
+                            num2++;
+                        }
+                    }
+                    catch (System.Exception)
+                    {
+                        result.result_count = 0;
+                    }
                 }
             }
 
@@ -494,7 +618,7 @@ namespace SuiteCRMClient
         public static string GetValueByKey(EntryValue entry, string key)
         {
             string str = string.Empty;
-            foreach (NameValue _value in entry.name_value_list1)
+            foreach (NameValue _value in entry.nameValueList)
             {
                 if (_value.name == key)
                 {
@@ -512,10 +636,12 @@ namespace SuiteCRMClient
         public static ModuleFields GetFieldsForModule(string module)
         {
             ModuleFields result;
+            /* module name is case sensitive, initial capital */
+            string moduleName = char.ToUpper(module[0]) + module.Substring(1);
 
-            if (RestAPIWrapper.moduleFieldsCache.ContainsKey(module))
+            if (RestAPIWrapper.moduleFieldsCache.ContainsKey(moduleName))
             {
-                result = RestAPIWrapper.moduleFieldsCache[module];
+                result = RestAPIWrapper.moduleFieldsCache[moduleName];
             }
             else
             {
@@ -525,11 +651,11 @@ namespace SuiteCRMClient
                     object data = new
                     {
                         @session = SuiteCRMUserSession.id,
-                        @module_name = module
+                        @module_name = moduleName
                     };
 
                     result = SuiteCRMUserSession.RestServer.GetCrmResponse<ModuleFields>("get_module_fields", data);
-                    RestAPIWrapper.moduleFieldsCache[module] = result;
+                    RestAPIWrapper.moduleFieldsCache[moduleName] = result;
                 }
                 else
                 {
@@ -655,31 +781,36 @@ namespace SuiteCRMClient
         /// </remarks>
         public static string[] GetSugarFields(string module)
         {
-            string[] strArray = new string[14];
-            if (module == null)
+            string[] result = new string[14];
+
+            switch (module)
             {
-                return strArray;
+                case "Calls":
+                    result = new string[] { "id", "name", "description", "date_start", "date_end",
+                        "date_modified", "duration_minutes", "duration_hours" };
+                    break;
+                case "Contacts":
+                    result = new string[] {"id", "first_name", "last_name", "email1", "phone_work",
+                        "phone_home", "title", "department", "primary_address_city", "primary_address_country",
+                        "primary_address_postalcode", "primary_address_state", "primary_address_street",
+                        "description", "user_sync", "date_modified", "account_name", "phone_mobile",
+                        "phone_fax", "salutation", "sync_contact" };
+                    break;
+                case "Meetings":
+                    result = new string[] { "id", "name", "description", "date_start", "date_end", "location",
+                        "date_modified", "duration_minutes", "duration_hours", "invitees", "assigned_user_id",
+                        "outlook_id" };
+                    break;
+                case "Tasks":
+                    result = new string[] { "id", "name", "description", "date_due", "status", "date_modified",
+                        "date_start", "priority", "assigned_user_id" };
+                    break;
+                default:
+                    result = new string[14];
+                    break;
             }
-            if (module == "Contacts")
-            {
-                return new string[] { 
-                    "id", "first_name", "last_name", "email1", "phone_work", "phone_home", "title", "department", "primary_address_city", "primary_address_country", "primary_address_postalcode", "primary_address_state", "primary_address_street", "description", "user_sync", "date_modified", 
-                    "account_name", "phone_mobile", "phone_fax", "salutation", "sync_contact"
-                 };
-            }
-            if (module == "Tasks")
-            {
-                return new string[] { "id", "name", "description", "date_due", "status", "date_modified", "date_start", "priority", "assigned_user_id" };
-            }
-            if (module == "Meetings")
-            {
-                return new string[] { "id", "name", "description", "date_start", "date_end", "location", "date_modified", "duration_minutes", "duration_hours", "invitees", "assigned_user_id" };
-            }
-            if (module == "Calls")
-            {
-                return new string[] { "id", "name", "description", "date_start", "date_end", "date_modified", "duration_minutes", "duration_hours" };
-            }
-            return strArray;
+
+            return result;
         }
     }
 }
