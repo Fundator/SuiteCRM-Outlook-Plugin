@@ -62,3 +62,11 @@ licencekey\.txt
 SuiteCRMAddIn/Documentation/html/
 
 SuiteCRMAddIn/Documentation/latex/
+
+*.pcapng
+
+*.xlsx
+
+*.psess
+
+*.vsp
