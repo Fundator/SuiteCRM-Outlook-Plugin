@@ -26,7 +26,7 @@
     <Setting Name="Password" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="Host" Type="System.String" Scope="Application">
+    <Setting Name="Host" Type="System.String" Scope="User">
       <Value Profile="(Default)">https://crm.debank.no/</Value>
     </Setting>
     <Setting Name="ArchiveAttachments" Type="System.Boolean" Scope="User">

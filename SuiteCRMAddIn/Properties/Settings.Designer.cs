@@ -112,12 +112,15 @@ namespace SuiteCRMAddIn.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("https://crm.debank.no/")]
         public string Host {
             get {
                 return ((string)(this["Host"]));
+            }
+            set {
+                this["Host"] = value;
             }
         }
         
