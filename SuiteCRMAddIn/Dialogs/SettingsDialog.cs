@@ -174,6 +174,7 @@ namespace SuiteCRMAddIn.Dialogs
         {
             var syncDirectionItems = Enum.GetValues(typeof(SyncDirection.Direction))
                     .Cast<SyncDirection.Direction>()
+                    .Where(d => d != SyncDirection.Direction.BiDirectional)
                     .Select(p => new { Key = (int)p, Value = SyncDirection.ToString(p) })
                     .OrderBy(o => o.Key)
                     .ToList();

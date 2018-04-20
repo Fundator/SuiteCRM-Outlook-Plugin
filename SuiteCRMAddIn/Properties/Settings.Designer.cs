@@ -221,7 +221,7 @@ namespace SuiteCRMAddIn.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
         public global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction SyncCalendar {
             get {
                 return ((global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction)(this["SyncCalendar"]));
