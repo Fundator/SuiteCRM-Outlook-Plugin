@@ -50,7 +50,7 @@ namespace SuiteCRMAddIn.BusinessLogic
     /// <item>If a state is created from a CRM record, it is set to <see cref="TransmissionState.NewFromCRM"/></item>
     /// <item>When a change has been made to it Outlook side, the relevant 
     /// <see cref="Synchroniser{OutlookItemType, SyncStateType}"/> sets it to <see cref="TransmissionState.Pending"/> , and passes it to an
-    /// <see cref="Daemon.AbstractTransmissionAction{OutlookItemType, SyncStateType}"/>.</item>
+    /// cref="Daemon.AbstractTransmissionAction{OutlookItemType, SyncStateType}".</item>
     /// <item>The AbstractTransmissionAction sets it to <see cref="TransmissionState.Queued"/> , and in due course) sends it back to 
     /// the same Synchroniser.</item>
     /// <item>The Synchroniser sets it to <see cref="TransmissionState.Transmitted"/> and transmits 
@@ -65,6 +65,7 @@ namespace SuiteCRMAddIn.BusinessLogic
     /// </list>
     /// </para>
     /// <typeparam name="ItemType">The type of the item to be/being synced.</typeparam>
+    /// </remarks>
     public abstract class SyncState<ItemType> : SyncState
         where ItemType : class
     {
@@ -75,7 +76,7 @@ namespace SuiteCRMAddIn.BusinessLogic
 
         public abstract Outlook.OlDefaultFolders DefaultFolder { get; }
 
-        int getItemFails = 0, getItemSuccesses = 0;
+        // int getItemFails = 0, getItemSuccesses = 0;
 
         /// <summary>
         /// The outlook item for which I maintain the synchronisation state.
