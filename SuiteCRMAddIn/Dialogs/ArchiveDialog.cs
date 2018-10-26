@@ -26,6 +26,7 @@ namespace SuiteCRMAddIn.Dialogs
     using Exceptions;
     using Extensions;
     using Microsoft.Office.Interop.Outlook;
+    using Newtonsoft.Json.Linq;
     using SuiteCRMClient;
     using SuiteCRMClient.Email;
     using SuiteCRMClient.Logging;
@@ -34,22 +35,66 @@ namespace SuiteCRMAddIn.Dialogs
     using System.Collections.Generic;
     using System.Data;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Text;
+    using System.Text.RegularExpressions;
+    using System.Threading;
     using System.Windows.Forms;
     using Exception = System.Exception;
 
     public partial class ArchiveDialog : Form
     {
-        public readonly List<string> standardModules = new List<string> { "Accounts", "Bugs", "Cases", ContactSyncing.CrmModule, "Leads", "Opportunities", "Project", "Users" };
+        public readonly List<string> standardModules = new List<string> { "Accounts", "Bugs", "Cases", ContactSynchroniser.CrmModule, "Leads", "Opportunities", "Project", "Users" };
 
-        public ArchiveDialog()
-        {
-            InitializeComponent();
-        }
-
-        public string type;
+        /// <summary>
+        /// The emails to be archived.
+        /// </summary>
+        private readonly IEnumerable<MailItem> archivableEmails;
 
         private ILogger Log => Globals.ThisAddIn.Log;
+
+        /// <summary>
+        /// Chains of modules to expand in the search tree.
+        /// </summary>
+        private IDictionary<string, ICollection<LinkSpec>> moduleChains = new Dictionary<string, ICollection<LinkSpec>>();
+
+        /// <summary>
+        /// The reason for archiving.
+        /// </summary>
+        private readonly EmailArchiveReason reason;
+
+        public ArchiveDialog(IEnumerable<MailItem> selectedEmails, EmailArchiveReason reason)
+        {
+            try
+            {
+                using (WaitCursor.For(this))
+                {
+                    this.moduleChains = AdvancedArchiveSettingsDialog.SetupSearchChains();
+                }
+            }
+            catch (Exception any)
+            {
+                ErrorHandler.Handle($"Failed to parse Archiving Search Chains value '{Properties.Settings.Default.ArchivingSearchChains}':", any);
+            }
+
+            this.archivableEmails = selectedEmails;
+            this.reason = reason;
+            InitializeComponent();
+
+            var alreadyArchived = selectedEmails.Where(x => !string.IsNullOrEmpty(x.GetCRMEntryId()));
+            var anyArchived = alreadyArchived.Any();
+            this.legend.Text = anyArchived ?
+                $"{alreadyArchived.Count()} message(s) have already been archived; rearchiving will remove any existing relationships. You must select all contacts, accounts, leads, etc that you wish to archive the message(s) to." :
+                "";
+            this.legend.Visible = anyArchived;
+
+            if (!anyArchived)
+            {
+                this.tsResults.Height += this.legend.Height;
+                this.lstViewSearchModules.Height += this.legend.Height;
+            }
+        }
+
 
         /// <summary>
         /// Add any selected custom modules to the list view
@@ -99,15 +144,15 @@ namespace SuiteCRMAddIn.Dialogs
 
         private void frmArchive_Load(object sender, EventArgs e)
         {
-            using (new WaitCursor(this))
-            {
-                this.AddActionHandlers();
-                this.PopulateUIComponents();
+            this.AddActionHandlers();
+            this.PopulateUIComponents();
 
-                if (Properties.Settings.Default.AutomaticSearch)
-                {
-                    this.btnSearch_Click(null, null);
-                }
+            if (Properties.Settings.Default.AutomaticSearch)
+            {
+               this.BeginInvoke((MethodInvoker)delegate
+               {
+                   this.Search(this.txtSearch.Text);
+               });
             }
         }
 
@@ -116,7 +161,7 @@ namespace SuiteCRMAddIn.Dialogs
         /// </summary>
         private void PopulateUIComponents()
         {
-            this.txtSearch.Text = ConstructSearchText(Globals.ThisAddIn.SelectedEmails);
+            this.txtSearch.Text = ConstructSearchText();
             if (Properties.Settings.Default.EmailCategories != null && Properties.Settings.Default.EmailCategories.IsImplemented)
             {
                 this.categoryInput.DataSource = Properties.Settings.Default.EmailCategories;
@@ -166,12 +211,76 @@ namespace SuiteCRMAddIn.Dialogs
         /// </summary>
         /// <param name="emails">A list of emails, presumably those selected by the user</param>
         /// <returns>A string comprising the sender addresses from the emails, comma separated.</returns>
-        private static string ConstructSearchText(IEnumerable<MailItem> emails)
+        private string ConstructSearchText()
         {
-            return string.Join(",", emails.Select(email => clsGlobals.GetSMTPEmailAddress(email))
-                .OrderBy(address => address)
-                .GroupBy(address => address)
-                .Select(g => g.First()));
+            string result;
+            var currentUserSMTPAddress = Globals.ThisAddIn.Application.GetCurrentUserSMTPAddress();
+            switch (this.reason)
+            {
+                case EmailArchiveReason.Inbound:
+                    result = ConstructInboundSearchTest();
+                    break;
+                case EmailArchiveReason.Manual:
+                    // is the sender the current user?
+                    if (this.archivableEmails
+                        .Select(email => email.GetSenderSMTPAddress())
+                        .Any(x => x.Equals(currentUserSMTPAddress)))
+                    {
+                        if (this.archivableEmails
+                            .Select(email => email.GetSenderSMTPAddress())
+                            .All(x => x.Equals(currentUserSMTPAddress)))
+                        {
+                            result = ConstructOutboundSearchText();
+                        }
+                        else
+                        {
+                            ICollection<string> addresses = 
+                                new HashSet<string>($"{ConstructInboundSearchTest()},{ConstructOutboundSearchText()}"
+                                .Split(','));
+                            addresses.Remove(currentUserSMTPAddress);
+                            result = string.Join(",", addresses.OrderBy(address => address)
+                                        .GroupBy(address => address)
+                                        .Select(g => g.First()));
+                        }
+                        }
+                    else
+                    {
+                        result = ConstructInboundSearchTest();
+                    }
+                    break;
+                case EmailArchiveReason.Outbound:
+                case EmailArchiveReason.SendAndArchive:
+                    result = ConstructOutboundSearchText();
+                    break;
+                default:
+                    result = string.Empty;
+                    break;
+            }
+
+            return result;
+        }
+
+        private string ConstructOutboundSearchText()
+        {
+            string result;
+            ICollection<string> addresses = new HashSet<string>();
+            foreach (var email in this.archivableEmails)
+            {
+                foreach (Recipient recipient in email.Recipients)
+                    addresses.Add(recipient.GetSmtpAddress());
+            }
+            result = string.Join(",", addresses.OrderBy(address => address)
+                        .GroupBy(address => address)
+                        .Select(g => g.First()));
+            return result;
+        }
+
+        private string ConstructInboundSearchTest()
+        {
+            return string.Join(",", this.archivableEmails.Select(email => email.GetSenderSMTPAddress())
+                        .OrderBy(address => address)
+                        .GroupBy(address => address)
+                        .Select(g => g.First()));
         }
 
 
@@ -193,17 +302,9 @@ namespace SuiteCRMAddIn.Dialogs
         {
             this.tsResults.Nodes.Clear();
 
-            if (this.txtSearch.Text.Replace(';', ',').Contains<char>(','))
-            {
-                foreach (string str in this.txtSearch.Text.Split(new char[] { ',' }).OrderBy(x => x).GroupBy(x => x).Select(g => g.First()))
-                {
-                    this.Search(str);
-                }
-            }
-            else
-            {
-                this.Search(this.txtSearch.Text);
-            }
+            this.Search(this.txtSearch.Text);
+
+            this.AcceptButton = btnArchive;
         }
 
         private bool UnallowedNumber(string strText)
@@ -224,12 +325,16 @@ namespace SuiteCRMAddIn.Dialogs
         /// <remarks>
         /// TODO: Candidate for refactoring.
         /// </remarks>
-        /// <param name="searchText">The text to search for.</param>
-        public void Search(string searchText)
+        /// <param name="allSearchText">The text to search for.</param>
+        public void Search(string allSearchText)
         {
-            using (WaitCursor.For(this))
+            this.txtSearch.Enabled = false;
+
+            foreach (string searchText in
+                allSearchText.Split(new char[] { ',', ';' })
+                .OrderBy(x => x)
+                .GroupBy(x => x).Select(g => g.First().Trim()))
             {
-                this.txtSearch.Enabled = false;
 
                 try
                 {
@@ -240,8 +345,6 @@ namespace SuiteCRMAddIn.Dialogs
                     }
                     else
                     {
-                        searchText = searchText.TrimStart(new char[0]);
-
                         foreach (ListViewItem item in this.lstViewSearchModules.Items)
                         {
                             TreeNode node = null;
@@ -257,8 +360,11 @@ namespace SuiteCRMAddIn.Dialogs
 
                                         List<string> fieldsToSeek = new List<string>();
                                         fieldsToSeek.Add("id");
-
-                                        var queryResult = TryQuery(searchText, moduleName, fieldsToSeek);
+                                        EntryList queryResult;
+                                        using (WaitCursor.For(this))
+                                        {
+                                            queryResult = TryQuery(searchText, moduleName, fieldsToSeek);
+                                        }
                                         if (queryResult != null)
                                         {
                                             if (queryResult.result_count > 0)
@@ -274,11 +380,12 @@ namespace SuiteCRMAddIn.Dialogs
                                                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                         }
                                     }
+
                                 }
                             }
                             catch (System.Exception any)
                             {
-                                Globals.ThisAddIn.Log.Error("Failure when custom module included (3)", any);
+                                ErrorHandler.Handle("Failure when custom module included (3)", any);
 
                                 MessageBox.Show(
                                     $"An error was encountered while querying module '{item.Tag.ToString()}'. The error ('{any.Message}') has been logged",
@@ -295,10 +402,10 @@ namespace SuiteCRMAddIn.Dialogs
                         }
                     }
                 }
-                catch (System.Exception any)
+                catch (Exception any)
                 {
 #if DEBUG
-                    Log.Error("frmArchive.Search: Unexpected error while populating archive tree", any);
+                    ErrorHandler.Handle("Unexpected error while populating archive tree", any);
 #endif
                     this.tsResults.Nodes.Clear();
                 }
@@ -310,6 +417,7 @@ namespace SuiteCRMAddIn.Dialogs
                     }
                     else
                     {
+                        this.tsResults.Sort();
                         this.btnArchive.Enabled = true;
                     }
                     this.txtSearch.Enabled = true;
@@ -336,23 +444,23 @@ namespace SuiteCRMAddIn.Dialogs
         {
             EntryList queryResult = null;
 
-            string queryText = ConstructQueryTextForModuleName(searchText, moduleName, fieldsToSeek);
+            var searchQuery = new SearchQuery(searchText, moduleName, fieldsToSeek, moduleChains);
             try
             {
-                queryResult = RestAPIWrapper.GetEntryList(moduleName, queryText, Properties.Settings.Default.SyncMaxRecords, "date_entered DESC", 0, false, fieldsToSeek.ToArray());
+                queryResult = searchQuery.Execute();
             }
             catch (System.Exception any)
             {
-                Globals.ThisAddIn.Log.Error($"Failure when custom module included (1)\n\tQuery was '{queryText}'", any);
+                ErrorHandler.Handle($"Failure when custom module included (1); Query was '{searchQuery}'", any);
 
-                queryText = queryText.Replace("%", string.Empty);
+                searchQuery = searchQuery.Replace("%", string.Empty);
                 try
                 {
-                    queryResult = RestAPIWrapper.GetEntryList(moduleName, queryText, Properties.Settings.Default.SyncMaxRecords, "date_entered DESC", 0, false, fieldsToSeek.ToArray());
+                    queryResult = searchQuery.Execute();
                 }
                 catch (Exception secondFail)
                 {
-                    Globals.ThisAddIn.Log.Error($"Failure when custom module included (2)\n\tQuery was '{queryText}'", secondFail);
+                    ErrorHandler.Handle($"Failure when custom module included (2); Query was '{searchQuery}'", secondFail);
                     queryResult = null;
                     throw;
                 }
@@ -392,106 +500,6 @@ namespace SuiteCRMAddIn.Dialogs
         }
 
         /// <summary>
-        /// Construct suitable query text to query the module with this name for potential connection with this search text.
-        /// </summary>
-        /// <remarks>
-        /// Refactored from a horrible nest of spaghetti code. I don't yet fully understand this.
-        /// TODO: Candidate for further refactoring to reduce complexity.
-        /// </remarks>
-        /// <param name="searchText">The text entered to search for.</param>
-        /// <param name="moduleName">The name of the module to search.</param>
-        /// <param name="fields">The list of fields to pull back, which may be modified by this method.</param>
-        /// <returns>A suitable search query</returns>
-        /// <exception cref="CouldNotConstructQueryException">if no search string could be constructed.</exception>
-        private static string ConstructQueryTextForModuleName(string searchText, string moduleName, List<string> fields)
-        {
-            string queryText = string.Empty;
-            List<string> searchTokens = searchText.Split(new char[] { ' ' }).ToList();
-            var escapedSearchText = RestAPIWrapper.MySqlEscape(searchText);
-            var firstTerm = RestAPIWrapper.MySqlEscape(searchTokens.First());
-            var lastTerm = RestAPIWrapper.MySqlEscape(searchTokens.Last());
-            string logicalOperator = firstTerm == lastTerm ? "OR" : "AND";
-
-            switch (moduleName)
-            {
-                case ContactSyncing.CrmModule:
-                    queryText = ConstructQueryTextWithFirstAndLastNames(moduleName, escapedSearchText, firstTerm, lastTerm);
-                    AddFirstLastAndAccountNames(fields);
-                    break;
-                case "Leads":
-                    queryText = ConstructQueryTextWithFirstAndLastNames(moduleName, escapedSearchText, firstTerm, lastTerm);
-                    AddFirstLastAndAccountNames(fields);
-                    break;
-                case "Cases":
-                    queryText = $"(cases.name LIKE '%{escapedSearchText}%' OR cases.case_number LIKE '{escapedSearchText}')";
-                    foreach (string fieldName in new string[] { "name", "case_number" })
-                    {
-                        fields.Add(fieldName);
-                    }
-                    break;
-                case "Bugs":
-                    queryText = $"(bugs.name LIKE '%{escapedSearchText}%' {logicalOperator} bugs.bug_number LIKE '{escapedSearchText}')";
-                    foreach (string fieldName in new string[] { "name", "bug_number" })
-                    {
-                        fields.Add(fieldName);
-                    }
-                    break;
-                case "Accounts":
-                    queryText = "(accounts.name LIKE '%" + firstTerm + "%') OR (accounts.id in (select eabr.bean_id from email_addr_bean_rel eabr INNER JOIN email_addresses ea on eabr.email_address_id = ea.id where eabr.bean_module = 'Accounts' and ea.email_address LIKE '%" + escapedSearchText + "%'))";
-                    AddFirstLastAndAccountNames(fields);
-                    break;
-                default:
-                    List<string> fieldNames = RestAPIWrapper.GetCharacterFields(moduleName);
-
-                    if (fieldNames.Contains("first_name") && fieldNames.Contains("last_name"))
-                    {
-                        /* This is Ian's suggestion */
-                        queryText = ConstructQueryTextWithFirstAndLastNames(moduleName, escapedSearchText, firstTerm, lastTerm);
-                        foreach (string fieldName in new string[] { "first_name", "last_name" })
-                        {
-                            fields.Add(fieldName);
-                        }
-                    }
-                    else
-                    {
-                        queryText = ConstructQueryTextForUnknownModule(moduleName, escapedSearchText);
-
-                        foreach (string candidate in new string[] {"name", "description"})
-                        {
-                            if (fieldNames.Contains(candidate))
-                            {
-                                fields.Add(candidate);
-                            }
-                        }
-                    }
-                    break;
-            }
-
-            if (string.IsNullOrEmpty(queryText))
-            {
-                throw new CouldNotConstructQueryException(moduleName, searchText);
-            }
-
-            return queryText;
-        }
-
-        /// <summary>
-        /// Add 'first_name', 'last_name', 'name' and 'account_name' to this list of field names.
-        /// </summary>
-        /// <remarks>
-        /// It feels completely wrong to do this in code. There should be a configuration file of
-        /// appropriate fieldnames for module names somewhere, but there isn't. TODO: probably fix.
-        /// </remarks>
-        /// <param name="fields">The list of field names.</param>
-        private static void AddFirstLastAndAccountNames(List<string> fields)
-        {
-            foreach (string fieldName in new string[] { "first_name", "last_name", "name", "account_name" })
-            {
-                fields.Add(fieldName);
-            }
-        }
-
-        /// <summary>
         /// If we really don't know anything about the module (which is likely with custom modules)
         /// the best we can do is see whether any of its text fields matches the search text.
         /// </summary>
@@ -527,35 +535,6 @@ namespace SuiteCRMAddIn.Dialogs
             return queryBuilder.ToString();
         }
 
-        /// <summary>
-        /// If the search text supplied comprises two space-separated tokens, these are possibly a first and last name;
-        /// if only one token, it's likely an email address, but might be a first or last name. 
-        /// This query explores those possibilities.
-        /// </summary>
-        /// <param name="moduleName">The name of the module to search.</param>
-        /// <param name="emailAddress">The portion of the search text which may be an email address.</param>
-        /// <param name="firstName">The portion of the search text which may be a first name</param>
-        /// <param name="lastName">The portion of the search text which may be a last name</param>
-        /// <returns>If the module has fields 'first_name' and 'last_name', then a potential query string;
-        /// else an empty string.</returns>
-        private static string ConstructQueryTextWithFirstAndLastNames(
-            string moduleName, 
-            string emailAddress, 
-            string firstName, 
-            string lastName)
-        {
-            List<string> fieldNames = RestAPIWrapper.GetCharacterFields(moduleName);
-            string result = string.Empty;
-            string logicalOperator = firstName == lastName ? "OR" : "AND";
-
-            if (fieldNames.Contains("first_name") && fieldNames.Contains("last_name"))
-            {
-                string lowerName = moduleName.ToLower();
-                result = $"({lowerName}.first_name LIKE '%{firstName}%' {logicalOperator} {lowerName}.last_name LIKE '%{lastName}%') OR ({lowerName}.id in (select eabr.bean_id from email_addr_bean_rel eabr INNER JOIN email_addresses ea on eabr.email_address_id = ea.id where eabr.bean_module = '{moduleName}' and ea.email_address LIKE '%{emailAddress}%'))"; ;
-            }
-
-            return result;
-        }
 
         /// <summary>
         /// Add a node beneath this parent representing this search result in this module.
@@ -565,9 +544,13 @@ namespace SuiteCRMAddIn.Dialogs
         /// <param name="parent">The parent node beneath which the new node should be added.</param>
         private void PopulateTree(EntryList searchResult, string module, TreeNode parent)
         {
-            foreach (EntryValue entry in searchResult.entry_list)
+            for (int i = 0; i < searchResult.entry_list.Count(); i++)
             {
+                EntryValue entry = searchResult.entry_list[i];
                 string key = RestAPIWrapper.GetValueByKey(entry, "id");
+
+                ICollection<LinkSpec> links = moduleChains.ContainsKey(module) ? moduleChains[module] : new List<LinkSpec>();
+
                 if (!parent.Nodes.ContainsKey(key))
                 {
                     TreeNode node = new TreeNode(ConstructNodeName(module, entry))
@@ -576,6 +559,26 @@ namespace SuiteCRMAddIn.Dialogs
                         Tag = key
                     };
                     parent.Nodes.Add(node);
+
+                    foreach (var relationship in entry.relationships.link_list)
+                    {
+                        LinkSpec link = links.Where(x => x.LinkName == relationship.name).FirstOrDefault();
+
+                        TreeNode chainNode = new TreeNode(link != null ? link.TargetName : relationship.name);
+                        node.Nodes.Add(chainNode);
+
+                        foreach (LinkRecord member in relationship.records)
+                        {
+                            var targetId = link != null ? link.TargetId : "id";
+
+                            TreeNode memberNode = new TreeNode(member.data.GetValueAsString(link != null ? link.Label : "name"))
+                            {
+                                Name = member.data.GetValueAsString(targetId),
+                                Tag = member.data.GetValueAsString(targetId)
+                            };
+                            chainNode.Nodes.Add(memberNode);
+                        }
+                    }
                 }
             }
             if (searchResult.result_count <= 3)
@@ -610,6 +613,9 @@ namespace SuiteCRMAddIn.Dialogs
                     break;
                 case "Cases":
                     keyValue = RestAPIWrapper.GetValueByKey(entry, "case_number");
+                    break;
+                case "Contacts":
+                    keyValue = string.Empty;
                     break;
                 default:
                     keyValue = RestAPIWrapper.GetValueByKey(entry, "account_name");
@@ -713,6 +719,8 @@ namespace SuiteCRMAddIn.Dialogs
 
         private void txtSearch_KeyDown(object sender, KeyEventArgs e)
         {
+            this.AcceptButton = btnSearch;
+
             if (e.KeyCode == Keys.Enter)
             {
                 e.Handled = true;
@@ -737,38 +745,63 @@ namespace SuiteCRMAddIn.Dialogs
         {
             try
             {
-                if (this.tsResults.Nodes.Count == 0)
+                IEnumerable<MailItem> itemsToArchive = ConfirmRearchiveAlreadyArchivedEmails.ConfirmAlreadyArchivedEmails(archivableEmails);
+
+                using (WaitCursor.For(this))
                 {
-                    MessageBox.Show("There are no search results.", "Error");
-                    return;
+                    try
+                    {
+                        if (this.tsResults.Nodes.Count == 0)
+                        {
+                            MessageBox.Show("There are no search results.", "Error");
+                            return;
+                        }
+
+                        var selectedCrmEntities = GetSelectedCrmEntities(this.tsResults);
+                        if (!selectedCrmEntities.Any())
+                        {
+                            MessageBox.Show("No selected CRM entities", "Error");
+                            return;
+                        }
+
+                        var selectedEmailsCount = itemsToArchive.Count();
+                        if (selectedEmailsCount > 0)
+                        {
+                            Log.Debug($"ArchiveDialog: About to manually archive {selectedEmailsCount} emails");
+                            var archiver = Globals.ThisAddIn.EmailArchiver;
+                            bool success = this.ReportOnEmailArchiveSuccess(
+                                itemsToArchive.Select(mailItem =>
+                                        archiver.ArchiveEmailWithEntityRelationships(mailItem, selectedCrmEntities, this.reason))
+                                    .ToList());
+                            string prefix = success ? "S" : "Uns";
+                            Log.Debug($"ArchiveDialog: {prefix}uccessfully archived {selectedEmailsCount} emails");
+
+                            this.DialogResult = DialogResult.OK;
+                            Close();
+                        }
+                        else
+                        {
+                            this.DialogResult = DialogResult.Cancel;
+                        }
+                    }
+                    catch (System.Exception exception)
+                    {
+                        this.DialogResult = DialogResult.Abort;
+                        Log.Error("btnArchive_Click", exception);
+                        MessageBox.Show("There was an error while archiving", "Error");
+                    }
+                    finally
+                    {
+                        foreach (MailItem i in this.archivableEmails)
+                        {
+                            i.Save();
+                        }
+                    }
                 }
-
-                var selectedCrmEntities = GetSelectedCrmEntities(this.tsResults);
-                if (!selectedCrmEntities.Any())
-                {
-                    MessageBox.Show("No selected CRM entities", "Error");
-                    return;
-                }
-
-                var selectedEmailsCount = Globals.ThisAddIn.SelectedEmailCount;
-                if (selectedEmailsCount == 0)
-                {
-                    MessageBox.Show("No emails selected", "Error");
-                    return;
-                }
-
-                var archiver = Globals.ThisAddIn.EmailArchiver;
-                this.ReportOnEmailArchiveSuccess(
-                    Globals.ThisAddIn.SelectedEmails.Select(mailItem =>
-                            archiver.ArchiveEmailWithEntityRelationships(mailItem, selectedCrmEntities, EmailArchiveReason.Manual))
-                        .ToList());
-
-                Close();
             }
-            catch (System.Exception exception)
+            catch (DialogCancelledException)
             {
-                Log.Error("btnArchive_Click", exception);
-                MessageBox.Show("There was an error while archiving", "Error");
+
             }
         }
 
@@ -823,6 +856,7 @@ namespace SuiteCRMAddIn.Dialogs
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
+            this.DialogResult = DialogResult.Cancel;
             base.Close();
         }
 
@@ -834,12 +868,6 @@ namespace SuiteCRMAddIn.Dialogs
             }
         }
 
-        private void txtSearch_Leave(object sender, EventArgs e)
-        {
-            btnSearch_Click(sender, e);
-            this.AcceptButton = btnArchive;
-        }
-
         /// <summary>
         /// If the Category input changes, set its current value as the Category property on 
         /// each of the currently selected emails.
@@ -848,13 +876,365 @@ namespace SuiteCRMAddIn.Dialogs
         /// <param name="e"></param>
         private void categoryInput_SelectedIndexChanged(object sender, EventArgs e)
         {
-            foreach (MailItem mail in Globals.ThisAddIn.SelectedEmails)
+            foreach (MailItem mail in this.archivableEmails)
             {
-                if (mail.UserProperties[MailItemExtensions.CRMCategoryPropertyName] == null)
+                try
                 {
-                    mail.UserProperties.Add(MailItemExtensions.CRMCategoryPropertyName, OlUserPropertyType.olText);
+                    if (mail.UserProperties[MailItemExtensions.CRMCategoryPropertyName] == null)
+                    {
+                        mail.UserProperties.Add(MailItemExtensions.CRMCategoryPropertyName, OlUserPropertyType.olText);
+                    }
+                    mail.UserProperties[MailItemExtensions.CRMCategoryPropertyName].Value = categoryInput.SelectedItem.ToString();
                 }
-                mail.UserProperties[MailItemExtensions.CRMCategoryPropertyName].Value = categoryInput.SelectedItem.ToString();
+                catch (COMException)
+                {
+                    /* this happens with SendAndArchive. Don't know why, but you can neither access the 
+                     * UserProperties nor add to them */
+                }
+            }
+        }
+        private void RemoveSelection(Object obj)
+        {
+            TextBox textbox = obj as TextBox;
+            if (textbox != null)
+            {
+                textbox.SelectionLength = 0;
+            }
+        }
+
+        private void legend_MouseUp(object sender, MouseEventArgs e)
+        {
+            RemoveSelection(sender);
+        }
+
+        private void legend_KeyUp(object sender, KeyEventArgs e)
+        {
+            RemoveSelection(sender);
+        }
+
+        internal class LinkSpec
+        {
+            /// <summary>
+            /// The name of the linking module
+            /// </summary>
+            public string LinkName { get; set; }
+
+            /// <summary>
+            /// The names of the fields to request
+            /// </summary>
+            public ICollection<string> FieldNames { get; set; }
+
+            /// <summary>
+            /// The name of the target module
+            /// </summary>
+            public string TargetName { get; set; }
+
+            /// <summary>
+            /// The name of the id field in the target module (expected to be one of the fields in `FieldNames`).
+            /// </summary>
+            public string TargetId { get; set; }
+
+            /// <summary>
+            /// The label to put on the node.
+            /// </summary>
+            public string Label { get; set; }
+
+            public LinkSpec(string linkName, string targetName, ICollection<string> fieldNames)
+            {
+                this.LinkName = linkName;
+                this.TargetName = targetName;
+                this.FieldNames = fieldNames;
+                this.TargetId = fieldNames.ElementAt(0);
+                this.Label = fieldNames.ElementAtOrDefault(1);
+            }
+
+        }
+
+        /// <summary>
+        /// A query to search the server side database in response to a client 
+        /// side (at this state, ArchiveDialog) query; a testable bean.
+        /// </summary>
+        internal class SearchQuery
+        {
+            /// <summary>
+            /// The text we're seeking.
+            /// </summary>
+            private string searchText;
+            /// <summary>
+            /// The name of the module within which we're seeking it.
+            /// </summary>
+            private string moduleName;
+            /// <summary>
+            /// The fields within which we're seeking.
+            /// </summary>
+            private List<string> fieldsToSeek;
+            /// <summary>
+            /// The chains of modules we should traverse.
+            /// </summary>
+            private IDictionary<string, ICollection<LinkSpec>> moduleChains;
+            /// <summary>
+            /// A collection of substitutions to make in the constructed search text.
+            /// </summary>
+            private IList<Tuple<Regex, string>> replacements = new List<Tuple<Regex, string>>();
+
+            /// <summary>
+            /// A collection of modulename, fieldname pairs to order by.
+            /// </summary>
+            private ISet<Tuple<string,string>> fieldsToOrderBy = new HashSet<Tuple<string,string>>();
+
+ 
+            /// <summary>
+            /// An arguably redundant property wrapped around 
+            /// ConstructSearchText, mainly for tesstability.
+            /// </summary>
+            public string QueryText { get
+                {
+                    return this.ConstructQueryText();
+                }
+            }
+
+            /// <summary>
+            /// Get the text of a clause to order the quwery results by.
+            /// </summary>
+            /// <remarks>Note that the `order_by` clause of `get_entry_list` 
+            /// doesn't work reliably, because of deduping.</remarks>
+            public string OrderClause { get
+                {
+                    return this.fieldsToOrderBy.Any() ? 
+                        String.Join(",", this.fieldsToOrderBy.Select(x=> x.Item2)) : 
+                        "date_entered DESC";
+                }
+            }
+
+            /// <summary>
+            /// Construct a new instance of a search query.
+            /// </summary>
+            /// <param name="searchText">The text entered to search for.</param>
+            /// <param name="moduleName">The name of the module to search.</param>
+            /// <param name="fieldsToSeek">The list of fields to pull back, which may be modified by this method.</param>
+            public SearchQuery(string searchText, string moduleName, List<string> fieldsToSeek, IDictionary<string, ICollection<LinkSpec>> moduleChains)
+            {
+                this.searchText = searchText;
+                this.moduleName = moduleName;
+                this.fieldsToSeek = fieldsToSeek;
+                this.moduleChains = moduleChains;
+            }
+
+            /// <summary>
+            /// If the search text supplied comprises two space-separated tokens, these are possibly a first and last name;
+            /// if only one token, it's likely an email address, but might be a first or last name. 
+            /// This query explores those possibilities.
+            /// </summary>
+            /// <param name="emailAddress">The portion of the search text which may be an email address.</param>
+            /// <param name="firstName">The portion of the search text which may be a first name</param>
+            /// <param name="lastName">The portion of the search text which may be a last name</param>
+            /// <returns>If the module has fields 'first_name' and 'last_name', then a potential query string;
+            /// else an empty string.</returns>
+            private string ConstructQueryTextWithFirstAndLastNames(
+                string emailAddress,
+                string firstName,
+                string lastName)
+            {
+                List<string> fieldNames = RestAPIWrapper.GetCharacterFields(this.moduleName);
+                string result = string.Empty;
+                string logicalOperator = firstName == lastName ? "OR" : "AND";
+
+                if (fieldNames.Contains("first_name") && fieldNames.Contains("last_name"))
+                {
+                    string moduleLower = this.moduleName.ToLower();
+                    fieldsToOrderBy.Add(new Tuple<string, string>(moduleLower, "last_name"));
+                    fieldsToOrderBy.Add(new Tuple<string, string>(moduleLower, "first_name"));
+                    fieldsToOrderBy.Add(new Tuple<string, string>("ea", "email_address"));
+
+                    result = $"({moduleLower}.first_name LIKE '%{firstName}%' {logicalOperator} {moduleLower}.last_name LIKE '%{lastName}%') OR ({moduleLower}.id in (select eabr.bean_id from email_addr_bean_rel eabr INNER JOIN email_addresses ea on eabr.email_address_id = ea.id where eabr.bean_module = '{moduleName}' and ea.email_address LIKE '%{emailAddress}%'))"; ;
+                }
+
+                return result;
+            }
+
+
+            /// <summary>
+            /// Add 'first_name', 'last_name', 'name' and 'account_name' to this list of field names.
+            /// </summary>
+            /// <remarks>
+            /// It feels completely wrong to do this in code. There should be a configuration file of
+            /// appropriate fieldnames for module names somewhere, but there isn't. TODO: probably fix.
+            /// </remarks>
+            /// <param name="fields">The list of field names.</param>
+            private void AddFirstLastAndAccountNames(List<string> fields)
+            {
+                foreach (string fieldName in new string[] { "first_name", "last_name", "name", "account_name" })
+                {
+                    fields.Add(fieldName);
+                    this.fieldsToOrderBy.Add(new Tuple<string, string>(this.moduleName, fieldName));
+                }
+            }
+
+
+            /// <summary>
+            /// Construct suitable query text to query the module with this name for potential connection with this search text.
+            /// </summary>
+            /// <remarks>
+            /// Refactored from a horrible nest of spaghetti code. I don't yet fully understand this.
+            /// TODO: Candidate for further refactoring to reduce complexity.
+            /// </remarks>
+            /// <returns>A suitable search query</returns>
+            /// <exception cref="CouldNotConstructQueryException">if no search string could be constructed.</exception>
+            private string ConstructQueryText()
+            {
+                string queryText = string.Empty;
+                List<string> searchTokens = searchText.Split(new char[] { ',', ';' }).ToList();
+                var escapedSearchText = RestAPIWrapper.MySqlEscape(searchText);
+                var firstTerm = RestAPIWrapper.MySqlEscape(searchTokens.First());
+                var lastTerm = RestAPIWrapper.MySqlEscape(searchTokens.Last());
+                string logicalOperator = firstTerm == lastTerm ? "OR" : "AND";
+
+                switch (moduleName)
+                {
+                    case ContactSynchroniser.CrmModule:
+                        queryText = ConstructQueryTextWithFirstAndLastNames(escapedSearchText, firstTerm, lastTerm);
+                        AddFirstLastAndAccountNames(fieldsToSeek);
+                        break;
+                    case "Leads":
+                        queryText = ConstructQueryTextWithFirstAndLastNames(escapedSearchText, firstTerm, lastTerm);
+                        AddFirstLastAndAccountNames(fieldsToSeek);
+                        break;
+                    case "Cases":
+                        queryText = $"(cases.name LIKE '%{escapedSearchText}%' OR cases.case_number LIKE '{escapedSearchText}')";
+                        foreach (string fieldName in new string[] { "name", "case_number" })
+                        {
+                            fieldsToSeek.Add(fieldName);
+                            fieldsToOrderBy.Add(new Tuple<string, string>(this.moduleName, fieldName));
+                        }
+                        break;
+                    case "Bugs":
+                        queryText = $"(bugs.name LIKE '%{escapedSearchText}%' {logicalOperator} bugs.bug_number LIKE '{escapedSearchText}')";
+                        foreach (string fieldName in new string[] { "name", "bug_number" })
+                        {
+                            fieldsToSeek.Add(fieldName);
+                            fieldsToOrderBy.Add(new Tuple<string, string>(this.moduleName, fieldName));
+                        }
+                        break;
+                    case "Accounts":
+                        queryText = "(accounts.name LIKE '%" + firstTerm + "%') OR (accounts.id in (select eabr.bean_id from email_addr_bean_rel eabr INNER JOIN email_addresses ea on eabr.email_address_id = ea.id where eabr.bean_module = 'Accounts' and ea.email_address LIKE '%" + escapedSearchText + "%'))";
+                        foreach (string fieldName in new string[] { "name", "account_name" })
+                        {
+                            this.fieldsToSeek.Add(fieldName);
+                            this.fieldsToOrderBy.Add(new Tuple<string, string>(this.moduleName, fieldName));
+                        }
+                        break;
+                    default:
+                        List<string> fieldNames = RestAPIWrapper.GetCharacterFields(moduleName);
+
+                        if (fieldNames.Contains("first_name") && fieldNames.Contains("last_name"))
+                        {
+                            /* This is Ian's suggestion */
+                            queryText = ConstructQueryTextWithFirstAndLastNames(escapedSearchText, firstTerm, lastTerm);
+                            foreach (string fieldName in new string[] { "first_name", "last_name" })
+                            {
+                                fieldsToSeek.Add(fieldName);
+                                fieldsToOrderBy.Add(new Tuple<string, string>(this.moduleName, fieldName));
+                            }
+                        }
+                        else
+                        {
+                            queryText = ConstructQueryTextForUnknownModule(moduleName, escapedSearchText);
+
+                            foreach (string fieldName in new string[] { "name", "description" })
+                            {
+                                if (fieldNames.Contains(fieldName))
+                                {
+                                    fieldsToSeek.Add(fieldName);
+                                    fieldsToOrderBy.Add(new Tuple<string, string>(this.moduleName, fieldName));
+                                }
+                            }
+                        }
+                        break;
+                }
+
+                if (string.IsNullOrEmpty(queryText))
+                {
+                    throw new CouldNotConstructQueryException(moduleName, searchText);
+                }
+
+                foreach (var replacement in this.replacements)
+                {
+                    queryText = replacement.Item1.Replace(queryText, replacement.Item2);
+                }
+
+                return queryText;
+            }
+
+            /// <summary>
+            /// Construct an array of links to traverse to the target module.
+            /// </summary>
+            /// <returns>The constructed array.</returns>
+            private object ConstructLinkNamesToFieldsArray()
+            {
+                object result;
+                try
+                {
+                    ICollection<LinkSpec> chain = this.moduleChains[moduleName];
+                    ICollection<object> links = new List<object>();
+
+                    foreach (var link in chain)
+                    {
+                        links.Add(new { @name = link.LinkName, @value = link.FieldNames });
+                    }
+
+                    result = links.ToArray();
+                }
+                catch (KeyNotFoundException)
+                {
+                    result = null;
+                }
+
+                return result;
+            }
+
+            /// <summary>
+            /// Execute me on the server.
+            /// </summary>
+            /// <returns>The results of executing me.</returns>
+            internal EntryList Execute()
+            {
+                string queryText = this.QueryText;
+
+                return RestAPIWrapper.GetEntryList(moduleName,
+                    queryText,
+                    Properties.Settings.Default.SyncMaxRecords,
+                    this.OrderClause,
+                    0,
+                    false,
+                    fieldsToSeek.ToArray(),
+                    ConstructLinkNamesToFieldsArray());
+            }
+
+            /// <summary>
+            /// Replace this pattern with this substitution in my query text.
+            /// </summary>
+            /// <remarks>Note that while you can add replacements, you cannot 
+            /// remove them.</remarks>
+            /// <param name="pattern">The pattern to replace.</param>
+            /// <param name="substitution">The substitution to replace it with.</param>
+            /// <returns>Myself, to allow chaining.</returns>
+            public SearchQuery Replace(string pattern, string substitution)
+            {
+                return this.Replace(new Regex(pattern), substitution);
+            }
+
+            /// <summary>
+            /// Replace this pattern with this substitution in my query text.
+            /// </summary>
+            /// <remarks>Note that while you can add replacements, you cannot 
+            /// remove them.</remarks>
+            /// <param name="pattern">The pattern to replace.</param>
+            /// <param name="substitution">The substitution to replace it with.</param>
+            /// <returns>Myself, to allow chaining.</returns>
+            public SearchQuery Replace(Regex attern, string substitution)
+            {
+                this.replacements.Add(new Tuple<Regex, string>(attern, substitution));
+                return this;
             }
         }
     }

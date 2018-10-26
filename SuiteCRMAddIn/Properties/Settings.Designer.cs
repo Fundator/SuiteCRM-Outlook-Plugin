@@ -8,11 +8,13 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
+using SuiteCRMAddIn.BusinessLogic;
+
 namespace SuiteCRMAddIn.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.3.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "14.0.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -91,12 +93,15 @@ namespace SuiteCRMAddIn.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string Username {
             get {
                 return ((string)(this["Username"]));
+            }
+            set {
+                this["Username"] = value;
             }
         }
         
@@ -114,7 +119,7 @@ namespace SuiteCRMAddIn.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("https://crm.debank.no/")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string Host {
             get {
                 return ((string)(this["Host"]));
@@ -219,21 +224,15 @@ namespace SuiteCRMAddIn.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("3")]
-        public global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction SyncCalendar {
-            get {
-                return ((global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction)(this["SyncCalendar"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
         public global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction SyncContacts {
             get {
                 return ((global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction)(this["SyncContacts"]));
+            }
+            set {
+                this["SyncContacts"] = value;
             }
         }
         
@@ -273,12 +272,15 @@ namespace SuiteCRMAddIn.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Debug")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Error")]
         public global::SuiteCRMClient.Logging.LogEntryType LogLevel {
             get {
                 return ((global::SuiteCRMClient.Logging.LogEntryType)(this["LogLevel"]));
+            }
+            set {
+                this["LogLevel"] = value;
             }
         }
         
@@ -328,6 +330,78 @@ namespace SuiteCRMAddIn.Properties {
             set {
                 this["NeedsUpgrade"] = value;
             }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction SyncCalls {
+            get {
+                return ((global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction)(this["SyncCalls"]));
+            }
+            set {
+                this["SyncCalls"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction SyncMeetings {
+            get {
+                return ((global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction)(this["SyncMeetings"]));
+            }
+            set {
+                this["SyncMeetings"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction SyncTasks {
+            get {
+                return ((global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction)(this["SyncTasks"]));
+            }
+            set {
+                this["SyncTasks"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("{ \"Contacts\": [ { \"linkName\": \"accounts_contacts_1\", \"targetName\": \"accounts\", \"f" +
+            "ields\": [\"id\", \"name\" ]}]}")]
+        public string ArchivingSearchChains {
+            get {
+                return ((string)(this["ArchivingSearchChains"]));
+            }
+            set {
+                this["ArchivingSearchChains"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("FirstTime")]
+        public ErrorHandler.PopupWhen ShowExceptions {
+            get {
+                return ((ErrorHandler.PopupWhen)(this["ShowExceptions"]));
+            }
+            set {
+                this["ShowExceptions"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Strict")]
+        public CrmIdValidationPolicy.Policy CrmIdValidationPolicy {
+            get
+            {
+                return ((CrmIdValidationPolicy.Policy) (this["CrmIdValidationPolicy"]));
+            }
+            set { this["CrmIdValidationPolicy"] = value; }
         }
     }
 }
