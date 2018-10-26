@@ -8,6 +8,8 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
+using SuiteCRMAddIn.BusinessLogic;
+
 namespace SuiteCRMAddIn.Properties {
     
     
@@ -371,6 +373,33 @@ namespace SuiteCRMAddIn.Properties {
             set {
                 this["ArchivingSearchChains"] = value;
             }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("FirstTime")]
+        public ErrorHandler.PopupWhen ShowExceptions
+        {
+            get
+            {
+                return ((ErrorHandler.PopupWhen)(this["ShowExceptions"]));
+            }
+            set
+            {
+                this["ShowExceptions"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Strict")]
+        public CrmIdValidationPolicy.Policy CrmIdValidationPolicy
+        {
+            get
+            {
+                return ((CrmIdValidationPolicy.Policy)(this["CrmIdValidationPolicy"]));
+            }
+            set { this["CrmIdValidationPolicy"] = value; }
         }
     }
 }
