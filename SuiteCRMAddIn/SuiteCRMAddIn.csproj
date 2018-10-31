@@ -452,6 +452,10 @@
       <Project>{383e8ee7-604d-447d-a2c2-c50080d28f69}</Project>
       <Name>SuiteCRMClient</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SuiteCRMUtil\SuiteCRMUtil.csproj">
+      <Project>{5f528e60-2876-4f9c-bfd3-15fc7fe06756}</Project>
+      <Name>SuiteCRMUtil</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
@@ -574,7 +578,7 @@
   <Target Name="Bump">
     <BumpVersion ReleaseLevel="$(ReleaseLevel)" TargetFileName="..\SuiteCRMAddinSetup\SuiteCRMAddinSetup.isl" />
     <BumpVersion ReleaseLevel="$(ReleaseLevel)" TargetFileName="..\SuiteCrmClient\Properties\AssemblyInfo.cs" />
-    <BumpVersion ReleaseLevel="$(ReleaseLevel)" TargetFileName="..\Doxyfile" />
+    <BumpVersion ReleaseLevel="$(ReleaseLevel)" TargetFileName="$(Doxyfile)" />
     <BumpVersion ReleaseLevel="$(ReleaseLevel)" TargetFileName="..\README.md" />
     <BumpVersion ReleaseLevel="$(ReleaseLevel)" TargetFileName="Properties\AssemblyInfo.cs" />
   </Target>

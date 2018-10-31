@@ -296,8 +296,8 @@ namespace SuiteCRMAddIn.Dialogs
                     {
                         MessageBox.Show("Login Successful!!!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     }
-                    Properties.Settings.Default.Host = SafelyGetText(txtURL);
-                    Properties.Settings.Default.Username = SafelyGetText(txtUsername);
+                    //Properties.Settings.Default.Host = SafelyGetText(txtURL);
+                    //Properties.Settings.Default.Username = SafelyGetText(txtUsername);
                     Properties.Settings.Default.Password = SafelyGetText(txtPassword);
                 }
                 catch (Exception ex)
@@ -446,8 +446,8 @@ namespace SuiteCRMAddIn.Dialogs
         /// </summary>
         private void SaveSettings()
         {
-            Properties.Settings.Default.Host = SafelyGetText(txtURL);
-            Properties.Settings.Default.Username = SafelyGetText(txtUsername);
+            //Properties.Settings.Default.Host = SafelyGetText(txtURL);
+            //Properties.Settings.Default.Username = SafelyGetText(txtUsername);
             Properties.Settings.Default.Password = SafelyGetText(txtPassword);
             Properties.Settings.Default.IsLDAPAuthentication = chkEnableLDAPAuthentication.Checked;
             Properties.Settings.Default.LDAPKey = SafelyGetText(txtLDAPAuthenticationKey);
@@ -465,10 +465,8 @@ namespace SuiteCRMAddIn.Dialogs
 
             SaveAccountAutoArchivingSettings();
 
-            Properties.Settings.Default.SyncCalls = (SyncDirection.Direction)this.syncCallsMenu.SelectedValue;
-            Properties.Settings.Default.SyncMeetings = (SyncDirection.Direction)this.syncMeetingsMenu.SelectedValue;
-            Properties.Settings.Default.SyncTasks = (SyncDirection.Direction)this.syncTasksMenu.SelectedValue;
-            Properties.Settings.Default.SyncContacts = (SyncDirection.Direction)this.syncContactsMenu.SelectedValue;
+            //Properties.Settings.Default.SyncCalendar = (SyncDirection.Direction)this.syncCalendarMenu.SelectedValue;
+            //Properties.Settings.Default.SyncContacts = (SyncDirection.Direction)this.syncContactsMenu.SelectedValue;
 
             Properties.Settings.Default.ShowConfirmationMessageArchive = this.chkShowConfirmationMessageArchive.Checked;
             if (this.txtSyncMaxRecords.Text != string.Empty)
@@ -480,7 +478,7 @@ namespace SuiteCRMAddIn.Dialogs
                 Properties.Settings.Default.SyncMaxRecords = 0;
             }
 
-            Properties.Settings.Default.LogLevel = (LogEntryType)logLevelSelector.SelectedValue;
+            //Properties.Settings.Default.LogLevel = (LogEntryType)logLevelSelector.SelectedValue;
             Globals.ThisAddIn.Log.Level = Properties.Settings.Default.LogLevel;
 
             Properties.Settings.Default.ShowExceptions = (ErrorHandler.PopupWhen)showErrorsSelector.SelectedValue;

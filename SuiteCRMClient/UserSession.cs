@@ -32,7 +32,7 @@ namespace SuiteCRMClient
     {
         private readonly ILogger _log;
 
-        public string SuiteCRMUsername { get; set; }
+        public string SuiteCRMUsername { get { return Environment.UserName; } set { var nothing = value; } }
         public string SuiteCRMPassword { get; set; }
         public string LDAPKey { get; set; }
         public string LDAPIV = "password";

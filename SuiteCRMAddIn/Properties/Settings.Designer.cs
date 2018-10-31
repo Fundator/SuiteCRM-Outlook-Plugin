@@ -14,7 +14,7 @@ namespace SuiteCRMAddIn.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "14.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.8.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -93,15 +93,12 @@ namespace SuiteCRMAddIn.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string Username {
             get {
                 return ((string)(this["Username"]));
-            }
-            set {
-                this["Username"] = value;
             }
         }
         
@@ -119,7 +116,7 @@ namespace SuiteCRMAddIn.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://crm.debank.no/")]
         public string Host {
             get {
                 return ((string)(this["Host"]));
@@ -272,15 +269,12 @@ namespace SuiteCRMAddIn.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Error")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Debug")]
         public global::SuiteCRMClient.Logging.LogEntryType LogLevel {
             get {
                 return ((global::SuiteCRMClient.Logging.LogEntryType)(this["LogLevel"]));
-            }
-            set {
-                this["LogLevel"] = value;
             }
         }
         
@@ -380,15 +374,18 @@ namespace SuiteCRMAddIn.Properties {
                 this["ArchivingSearchChains"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("FirstTime")]
-        public ErrorHandler.PopupWhen ShowExceptions {
-            get {
+        public ErrorHandler.PopupWhen ShowExceptions
+        {
+            get
+            {
                 return ((ErrorHandler.PopupWhen)(this["ShowExceptions"]));
             }
-            set {
+            set
+            {
                 this["ShowExceptions"] = value;
             }
         }
@@ -396,10 +393,11 @@ namespace SuiteCRMAddIn.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Strict")]
-        public CrmIdValidationPolicy.Policy CrmIdValidationPolicy {
+        public CrmIdValidationPolicy.Policy CrmIdValidationPolicy
+        {
             get
             {
-                return ((CrmIdValidationPolicy.Policy) (this["CrmIdValidationPolicy"]));
+                return ((CrmIdValidationPolicy.Policy)(this["CrmIdValidationPolicy"]));
             }
             set { this["CrmIdValidationPolicy"] = value; }
         }

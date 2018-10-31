@@ -29,6 +29,7 @@ namespace SuiteCRMClient
     using Newtonsoft.Json;
     using RESTObjects;
     using SuiteCRMClient.Logging;
+    using SuiteCRMUtil;
     using System;
     using System.IO;
     using System.Net;
@@ -199,7 +200,7 @@ namespace SuiteCRMClient
         {
             try
             {
-                var requestUrl = SuiteCRMURL.AbsoluteUri + "service/v4_1/rest.php";
+                var requestUrl = SuiteCRMURL.AbsoluteUri + "custom/debank/api/rest.php" + "?Auth=" + AuthUtil.GetEndpointAuthorizationString(DateTime.Now);
                 string jsonData = CreatePayload(strMethod, objInput);
 
                 var contentTypeAndEncoding = "application/x-www-form-urlencoded; charset=utf-8";

@@ -129,6 +129,12 @@
     </None>
     <None Include="SuiteCRMClient.snk" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SuiteCRMUtil\SuiteCRMUtil.csproj">
+      <Project>{5F528E60-2876-4F9C-BFD3-15FC7FE06756}</Project>
+      <Name>SuiteCRMUtil</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
