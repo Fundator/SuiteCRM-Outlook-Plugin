@@ -120,8 +120,8 @@ namespace SuiteCRMAddIn.Dialogs
             if (Properties.Settings.Default.Host != string.Empty)
             {
                 txtURL.Text = Properties.Settings.Default.Host;
-                txtUsername.Text = Properties.Settings.Default.Username;
-                txtPassword.Text = Properties.Settings.Default.Password;
+                txtUsername.Text = Environment.UserName;
+                txtPassword.Text = Environment.UserName;
                 licenceText.Text = Properties.Settings.Default.LicenceKey;
             }
             this.chkEnableLDAPAuthentication.Checked = Properties.Settings.Default.IsLDAPAuthentication;
