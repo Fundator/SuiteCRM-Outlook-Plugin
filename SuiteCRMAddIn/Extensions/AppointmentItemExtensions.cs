@@ -80,7 +80,12 @@ namespace SuiteCRMAddIn.Extensions
             }
             else
             {
-                result = olItem.GetVCalId();
+                var temp = olItem.GetVCalId();
+                if (CrmId.IsValid(temp))
+                    result = temp;
+                else
+                    result = String.Empty;
+                   
             }
 
             return CrmId.Get(result);

@@ -62,13 +62,15 @@ namespace SuiteCRMAddIn.BusinessLogic
             var errorClassName = error?.GetType().Name ?? string.Empty;
             StringBuilder bob = new StringBuilder(contextMessage);
 
-            for (Exception e = error; e != null; e = e.GetBaseException())
+            int i = 0;
+            for (Exception e = error; e != null && i < 3; e = e.GetBaseException())
             {
                 if (e != error)
                 {
                     bob.Append("Caused by: ");
                 }
                 bob.Append(e.GetType().Name).Append(e.Message);
+                i++;
             }
             string text = bob.ToString();
 
