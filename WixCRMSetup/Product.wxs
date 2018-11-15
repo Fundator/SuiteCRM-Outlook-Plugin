@@ -125,6 +125,16 @@
 					  Name="NGettext.dll"
 					  Source="$(var.AddinFiles)" />
 			</Component>
+		  <Component Id="SuiteCRMAddIn_nunit3testadapter_Component">
+		    <File Id="SuiteCRMAddIn_nunit3testadapter" KeyPath="yes"
+		          Name="nunit.engine.dll"
+		          Source="$(var.AddinFiles)" />
+		  </Component>
+		  <Component Id="SuiteCRMAddIn_tidyhtml5managedrepack_Component">
+		    <File Id="SuiteCRMAddIn_tidyhtml5managedrepack" KeyPath="yes"
+		          Name="tidy.x86.dll"
+		          Source="$(var.AddinFiles)" />
+		  </Component>
 
 			<!-- VSTO -->
 			<Component Id="SuiteCRMAddIn_vsto_Component">

@@ -90,7 +90,7 @@
       <Value Profile="(Default)">{ "Contacts": [ { "linkName": "accounts_contacts_1", "targetName": "accounts", "fields": ["id", "name" ]}]}</Value>
     </Setting>
     <Setting Name="Host" Type="System.String" Scope="User">
-      <Value Profile="(Default)">http://172.19.10.94/</Value>
+      <Value Profile="(Default)">https://crm.debank.no/</Value>
     </Setting>
   </Settings>
 </SettingsFile>

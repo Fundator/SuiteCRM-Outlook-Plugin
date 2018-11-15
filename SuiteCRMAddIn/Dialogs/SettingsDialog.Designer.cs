@@ -631,7 +631,6 @@ namespace SuiteCRMAddIn.Dialogs
             // 
             // syncCallsMenu
             // 
-            this.syncCallsMenu.Enabled = false;
             this.syncCallsMenu.FormattingEnabled = true;
             this.syncCallsMenu.Location = new System.Drawing.Point(231, 140);
             this.syncCallsMenu.Margin = new System.Windows.Forms.Padding(6);
