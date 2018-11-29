@@ -255,7 +255,7 @@ namespace SuiteCRMAddIn.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Debug")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Error")]
         public global::SuiteCRMClient.Logging.LogEntryType LogLevel {
             get {
                 return ((global::SuiteCRMClient.Logging.LogEntryType)(this["LogLevel"]));
@@ -312,7 +312,7 @@ namespace SuiteCRMAddIn.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2")]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
         public global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction SyncCalls {
             get {
                 return ((global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction)(this["SyncCalls"]));
@@ -330,7 +330,7 @@ namespace SuiteCRMAddIn.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("2")]
         public global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction SyncTasks {
             get {
                 return ((global::SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction)(this["SyncTasks"]));
