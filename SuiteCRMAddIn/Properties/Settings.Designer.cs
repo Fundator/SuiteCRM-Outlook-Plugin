@@ -363,7 +363,7 @@ namespace SuiteCRMAddIn.Properties {
         }
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("FirstTime")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Never")]
         public ErrorHandler.PopupWhen ShowExceptions
         {
             get

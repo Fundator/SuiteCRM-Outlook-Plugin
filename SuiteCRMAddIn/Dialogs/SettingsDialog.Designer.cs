@@ -612,6 +612,7 @@ namespace SuiteCRMAddIn.Dialogs
             // 
             // syncMeetingsMenu
             // 
+            this.syncMeetingsMenu.Enabled = false;
             this.syncMeetingsMenu.FormattingEnabled = true;
             this.syncMeetingsMenu.Location = new System.Drawing.Point(231, 190);
             this.syncMeetingsMenu.Margin = new System.Windows.Forms.Padding(6);
@@ -631,6 +632,7 @@ namespace SuiteCRMAddIn.Dialogs
             // 
             // syncCallsMenu
             // 
+            this.syncCallsMenu.Enabled = false;
             this.syncCallsMenu.FormattingEnabled = true;
             this.syncCallsMenu.Location = new System.Drawing.Point(231, 140);
             this.syncCallsMenu.Margin = new System.Windows.Forms.Padding(6);
