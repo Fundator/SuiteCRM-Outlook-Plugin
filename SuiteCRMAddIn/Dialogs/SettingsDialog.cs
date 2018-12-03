@@ -478,8 +478,7 @@ namespace SuiteCRMAddIn.Dialogs
                 Properties.Settings.Default.SyncMaxRecords = 0;
             }
 
-            //Properties.Settings.Default.LogLevel = (LogEntryType)logLevelSelector.SelectedValue;
-            Globals.ThisAddIn.Log.Level = Properties.Settings.Default.LogLevel;
+            Properties.Settings.Default.LogLevel = (LogEntryType)logLevelSelector.SelectedValue;
 
             Properties.Settings.Default.ShowExceptions = (ErrorHandler.PopupWhen)showErrorsSelector.SelectedValue;
 

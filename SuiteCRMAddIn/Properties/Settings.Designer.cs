@@ -253,12 +253,15 @@ namespace SuiteCRMAddIn.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Error")]
         public global::SuiteCRMClient.Logging.LogEntryType LogLevel {
             get {
                 return ((global::SuiteCRMClient.Logging.LogEntryType)(this["LogLevel"]));
+            }
+            set {
+                this["LogLevel"] = value;
             }
         }
         
