@@ -78,7 +78,7 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="SyncCalls" Type="SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction" Scope="Application">
-      <Value Profile="(Default)">0</Value>
+      <Value Profile="(Default)">2</Value>
     </Setting>
     <Setting Name="SyncMeetings" Type="SuiteCRMAddIn.BusinessLogic.SyncDirection.Direction" Scope="Application">
       <Value Profile="(Default)">2</Value>
